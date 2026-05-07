@@ -103,7 +103,10 @@ export const createPurchase = async (
   data: CreatePurchaseData,
 ): Promise<ApiResponse<PurchaseInvoice>> => {
   try {
-    const response = await axiosInstance.post("/purchase-invoice/create", data);
+    const response = await axiosInstance.post(
+      "api/purchase-invoice/create",
+      data,
+    );
     return response.data;
   } catch (error) {
     console.error("Create purchase error:", error);
@@ -127,7 +130,7 @@ export const addProductToPurchase = async (
       payload.productId = data.productId;
     }
     const response = await axiosInstance.post(
-      "/purchase-invoice/add-product",
+      "api/purchase-invoice/add-product",
       payload,
     );
     return response.data;
@@ -145,7 +148,7 @@ export const removeProductFromPurchase = async (
 ): Promise<ApiResponse<PurchaseInvoice>> => {
   try {
     const response = await axiosInstance.post(
-      "/purchase-invoice/remove-product",
+      "api/purchase-invoice/remove-product",
       data,
     );
     return response.data;
@@ -163,7 +166,7 @@ export const updatePurchaseQuantity = async (
 ): Promise<ApiResponse<PurchaseInvoice>> => {
   try {
     const response = await axiosInstance.put(
-      "/purchase-invoice/update-quantity",
+      "api/purchase-invoice/update-quantity",
       data,
     );
     return response.data;
@@ -190,7 +193,7 @@ export const completePurchase = async (
       payload.remarks = remarks;
     }
     const response = await axiosInstance.post(
-      `/purchase-invoice/complete/${id}`,
+      `api/purchase-invoice/complete/${id}`,
       payload,
     );
     return response.data;
@@ -207,7 +210,7 @@ export const getPurchaseById = async (
   id: string,
 ): Promise<ApiResponse<PurchaseInvoice>> => {
   try {
-    const response = await axiosInstance.get(`/purchase-invoice/${id}`);
+    const response = await axiosInstance.get(`api/purchase-invoice/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get purchase by ID error:", error);
@@ -222,7 +225,7 @@ export const deletePurchase = async (
   id: string,
 ): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/purchase-invoice/${id}`);
+    const response = await axiosInstance.delete(`api/purchase-invoice/${id}`);
     // console.log("Delete purchase response:", response.data);
     return response.data;
   } catch (error) {
@@ -238,7 +241,9 @@ export const getCompletedPurchases = async (): Promise<
   ApiResponse<PurchaseInvoice[]>
 > => {
   try {
-    const response = await axiosInstance.get("/purchase-invoice/complete/all");
+    const response = await axiosInstance.get(
+      "api/purchase-invoice/complete/all",
+    );
     // console.log("Get completed purchases response:", response.data);
     return response.data;
   } catch (error) {
@@ -256,7 +261,7 @@ export const updatePurchasePaymentStatus = async (
 ): Promise<ApiResponse<PurchaseInvoice>> => {
   try {
     const response = await axiosInstance.put(
-      `/purchase-invoice/payment-status/${id}`,
+      `api/purchase-invoice/payment-status/${id}`,
       {
         paymentStatus,
       },

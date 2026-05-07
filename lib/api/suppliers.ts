@@ -43,7 +43,7 @@ export interface ApiResponse<T> {
 // Get all suppliers
 export const getSuppliers = async (): Promise<ApiResponse<Supplier[]>> => {
   try {
-    const response = await axiosInstance.get("/suppliers");
+    const response = await axiosInstance.get("api/suppliers");
     return response.data;
   } catch (error) {
     console.error("Get suppliers error:", error);
@@ -56,7 +56,7 @@ export const getSupplierById = async (
   id: string,
 ): Promise<ApiResponse<Supplier>> => {
   try {
-    const response = await axiosInstance.get(`/suppliers/${id}`);
+    const response = await axiosInstance.get(`api/suppliers/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get supplier by ID error:", error);
@@ -69,7 +69,7 @@ export const createSupplier = async (
   data: CreateSupplierData,
 ): Promise<ApiResponse<Supplier>> => {
   try {
-    const response = await axiosInstance.post("/suppliers", data);
+    const response = await axiosInstance.post("api/suppliers", data);
     return response.data;
   } catch (error) {
     console.error("Create supplier error:", error);
@@ -83,7 +83,7 @@ export const updateSupplier = async (
   data: UpdateSupplierData,
 ): Promise<ApiResponse<Supplier>> => {
   try {
-    const response = await axiosInstance.put(`/suppliers/${id}`, data);
+    const response = await axiosInstance.put(`api/suppliers/${id}`, data);
     return response.data;
   } catch (error) {
     console.error("Update supplier error:", error);
@@ -96,7 +96,7 @@ export const deleteSupplier = async (
   id: string,
 ): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/suppliers/${id}`);
+    const response = await axiosInstance.delete(`api/suppliers/${id}`);
     return response.data;
   } catch (error) {
     console.error("Delete supplier error:", error);

@@ -34,7 +34,7 @@ export interface ApiResponse<T> {
 // Get all users
 export const getAllUsers = async (): Promise<ApiResponse<User[]>> => {
   try {
-    const response = await axiosInstance.get("/users");
+    const response = await axiosInstance.get("api/users");
     return response.data;
   } catch (error) {
     console.error("Get all users error:", error);
@@ -47,7 +47,7 @@ export const getUsersByBranch = async (
   branchId: string,
 ): Promise<ApiResponse<User[]>> => {
   try {
-    const response = await axiosInstance.get(`/branches/${branchId}/users`);
+    const response = await axiosInstance.get(`api/branches/${branchId}/users`);
     return response.data;
   } catch (error) {
     console.error("Get users by branch error:", error);
@@ -62,7 +62,7 @@ export const createUser = async (
 ): Promise<ApiResponse<User>> => {
   try {
     const response = await axiosInstance.post(
-      `/branches/${branchId}/users`,
+      `api/branches/${branchId}/users`,
       data,
     );
     return response.data;
@@ -78,7 +78,7 @@ export const updateUser = async (
   data: UpdateUserData,
 ): Promise<ApiResponse<User>> => {
   try {
-    const response = await axiosInstance.put(`/users/${id}`, data);
+    const response = await axiosInstance.put(`api/users/${id}`, data);
     return response.data;
   } catch (error) {
     console.error("Update user error:", error);
@@ -89,7 +89,7 @@ export const updateUser = async (
 // Delete user
 export const deleteUser = async (id: string): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/users/${id}`);
+    const response = await axiosInstance.delete(`api/users/${id}`);
     return response.data;
   } catch (error) {
     console.error("Delete user error:", error);

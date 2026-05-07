@@ -7,7 +7,7 @@ export const adminLogin = async (
   captchaToken: string,
 ) => {
   try {
-    const response = await axiosInstance.post("/admin/login", {
+    const response = await axiosInstance.post("api/admin/login", {
       email,
       password,
       captchaToken,
@@ -21,7 +21,7 @@ export const adminLogin = async (
 
 export const adminLogout = async () => {
   try {
-    const response = await axiosInstance.post("/admin/logout");
+    const response = await axiosInstance.post("api/admin/logout");
     return response.data;
   } catch (error) {
     console.error("Logout API error:", error);
@@ -31,7 +31,7 @@ export const adminLogout = async () => {
 
 export const getAdminProfile = async () => {
   try {
-    const response = await axiosInstance.get("/admin/profile");
+    const response = await axiosInstance.get("api/admin/profile");
     return response.data;
   } catch (error) {
     console.error("Get admin profile error:", error);
@@ -41,7 +41,7 @@ export const getAdminProfile = async () => {
 
 export const updateAdminProfile = async (data: FormData) => {
   try {
-    const response = await axiosInstance.put("/admin/profile", data, {
+    const response = await axiosInstance.put("api/admin/profile", data, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -55,7 +55,7 @@ export const updateAdminProfile = async (data: FormData) => {
 
 export const adminForgotPassword = async (email: string) => {
   try {
-    const response = await axiosInstance.post("/admin/forgot-password", {
+    const response = await axiosInstance.post("api/admin/forgot-password", {
       email,
     });
     return response.data;
@@ -68,7 +68,7 @@ export const adminForgotPassword = async (email: string) => {
 export const adminResetPassword = async (token: string, password: string) => {
   try {
     const response = await axiosInstance.post(
-      `/admin/reset-password/${token}`,
+      `api/admin/reset-password/${token}`,
       {
         password,
       },
@@ -87,7 +87,7 @@ export const userLogin = async (
   captchaToken: string,
 ) => {
   try {
-    const response = await axiosInstance.post("/users/login", {
+    const response = await axiosInstance.post("api/users/login", {
       email,
       password,
       captchaToken,
@@ -101,7 +101,7 @@ export const userLogin = async (
 
 export const userLogout = async () => {
   try {
-    const response = await axiosInstance.post("/users/logout");
+    const response = await axiosInstance.post("api/users/logout");
     return response.data;
   } catch (error) {
     console.error("User logout error:", error);
@@ -111,7 +111,7 @@ export const userLogout = async () => {
 
 export const getUserProfile = async () => {
   try {
-    const response = await axiosInstance.get("/users/profile");
+    const response = await axiosInstance.get("api/users/profile");
     return response.data;
   } catch (error) {
     console.error("Get user profile error:", error);
@@ -121,7 +121,7 @@ export const getUserProfile = async () => {
 
 export const updateUserProfile = async (data: FormData) => {
   try {
-    const response = await axiosInstance.put("/users/profile", data, {
+    const response = await axiosInstance.put("api/users/profile", data, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -135,7 +135,7 @@ export const updateUserProfile = async (data: FormData) => {
 
 export const userForgotPassword = async (email: string) => {
   try {
-    const response = await axiosInstance.post("/users/forgot-password", {
+    const response = await axiosInstance.post("api/users/forgot-password", {
       email,
     });
     return response.data;
@@ -148,7 +148,7 @@ export const userForgotPassword = async (email: string) => {
 export const userResetPassword = async (token: string, password: string) => {
   try {
     const response = await axiosInstance.post(
-      `/users/reset-password/${token}`,
+      `api/users/reset-password/${token}`,
       {
         password,
       },

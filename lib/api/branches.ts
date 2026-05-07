@@ -17,7 +17,7 @@ export interface ApiResponse<T> {
 // Get all branches
 export const getBranches = async (): Promise<ApiResponse<Branch[]>> => {
   try {
-    const response = await axiosInstance.get("/branches");
+    const response = await axiosInstance.get("api/branches");
     return response.data;
   } catch (error) {
     console.error("Get branches error:", error);
@@ -30,7 +30,7 @@ export const getBranchById = async (
   id: string,
 ): Promise<ApiResponse<Branch>> => {
   try {
-    const response = await axiosInstance.get(`/branches/${id}`);
+    const response = await axiosInstance.get(`api/branches/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get branch by ID error:", error);
@@ -43,7 +43,7 @@ export const createBranch = async (
   data: BranchFormData,
 ): Promise<ApiResponse<Branch>> => {
   try {
-    const response = await axiosInstance.post("/branches", data);
+    const response = await axiosInstance.post("api/branches", data);
     return response.data;
   } catch (error) {
     console.error("Create branch error:", error);
@@ -57,7 +57,7 @@ export const updateBranch = async (
   data: Partial<BranchFormData>,
 ): Promise<ApiResponse<Branch>> => {
   try {
-    const response = await axiosInstance.put(`/branches/${id}`, data);
+    const response = await axiosInstance.put(`api/branches/${id}`, data);
     return response.data;
   } catch (error) {
     console.error("Update branch error:", error);
@@ -68,7 +68,7 @@ export const updateBranch = async (
 // Delete branch
 export const deleteBranch = async (id: string): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/branches/${id}`);
+    const response = await axiosInstance.delete(`api/branches/${id}`);
     return response.data;
   } catch (error) {
     console.error("Delete branch error:", error);

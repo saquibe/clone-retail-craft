@@ -60,7 +60,7 @@ export interface ApiResponse<T> {
 // Get all customers
 export const getCustomers = async (): Promise<ApiResponse<Customer[]>> => {
   try {
-    const response = await axiosInstance.get("/customers");
+    const response = await axiosInstance.get("api/customers");
     return response.data;
   } catch (error) {
     console.error("Get customers error:", error);
@@ -73,7 +73,7 @@ export const getCustomerById = async (
   id: string,
 ): Promise<ApiResponse<Customer>> => {
   try {
-    const response = await axiosInstance.get(`/customers/single/${id}`);
+    const response = await axiosInstance.get(`api/customers/single/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get customer by ID error:", error);
@@ -86,7 +86,7 @@ export const createCustomer = async (
   data: CreateCustomerData,
 ): Promise<ApiResponse<Customer>> => {
   try {
-    const response = await axiosInstance.post("/customers", data);
+    const response = await axiosInstance.post("api/customers", data);
     return response.data;
   } catch (error) {
     console.error("Create customer error:", error);
@@ -100,7 +100,7 @@ export const updateCustomer = async (
   data: UpdateCustomerData,
 ): Promise<ApiResponse<Customer>> => {
   try {
-    const response = await axiosInstance.put(`/customers/${id}`, data);
+    const response = await axiosInstance.put(`api/customers/${id}`, data);
     return response.data;
   } catch (error) {
     console.error("Update customer error:", error);
@@ -113,7 +113,7 @@ export const deleteCustomer = async (
   id: string,
 ): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/customers/${id}`);
+    const response = await axiosInstance.delete(`api/customers/${id}`);
     return response.data;
   } catch (error) {
     console.error("Delete customer error:", error);

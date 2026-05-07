@@ -39,8 +39,8 @@ axiosInstance.interceptors.response.use(
 
         const refreshUrl =
           userType === "admin"
-            ? `${baseURL}/admin/refresh-token`
-            : `${baseURL}/users/refresh-token`;
+            ? `${baseURL}/api/admin/refresh-token`
+            : `${baseURL}/api/users/refresh-token`;
 
         const response = await axios.get(refreshUrl, {
           withCredentials: true,

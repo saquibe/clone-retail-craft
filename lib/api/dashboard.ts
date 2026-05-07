@@ -65,7 +65,7 @@ export const getDashboardData = async (
   range: "today" | "week" | "month" | "year" = "month",
 ): Promise<ApiResponse<DashboardData>> => {
   try {
-    const response = await axiosInstance.get(`/dashboard?range=${range}`);
+    const response = await axiosInstance.get(`api/dashboard?range=${range}`);
     return response.data;
   } catch (error) {
     console.error("Get dashboard data error:", error);
@@ -76,7 +76,7 @@ export const getDashboardData = async (
 // Get receivables only
 export const getReceivables = async (): Promise<ApiResponse<any[]>> => {
   try {
-    const response = await axiosInstance.get("/dashboard/receivables");
+    const response = await axiosInstance.get("api/dashboard/receivables");
     return response.data;
   } catch (error) {
     console.error("Get receivables error:", error);
@@ -87,7 +87,7 @@ export const getReceivables = async (): Promise<ApiResponse<any[]>> => {
 // Get payables only
 export const getPayables = async (): Promise<ApiResponse<any[]>> => {
   try {
-    const response = await axiosInstance.get("/dashboard/payables");
+    const response = await axiosInstance.get("api/dashboard/payables");
     return response.data;
   } catch (error) {
     console.error("Get payables error:", error);

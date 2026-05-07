@@ -51,7 +51,7 @@ export const createBilling = async (
   customerId: string,
 ): Promise<ApiResponse<Billing>> => {
   try {
-    const response = await axiosInstance.post("/billing/create", {
+    const response = await axiosInstance.post("api/billing/create", {
       customerId,
     });
     return response.data;
@@ -79,7 +79,7 @@ export const addProductToBilling = async (
     if (productId) {
       payload.productId = productId;
     }
-    const response = await axiosInstance.post("/billing/add-product", payload);
+    const response = await axiosInstance.post("api/billing/add-product", payload);
     return response.data;
   } catch (error) {
     console.error("Add product error:", error);
@@ -95,7 +95,7 @@ export const removeProductFromBilling = async (
   productId: string,
 ): Promise<ApiResponse<Billing>> => {
   try {
-    const response = await axiosInstance.post("/billing/remove-product", {
+    const response = await axiosInstance.post("api/billing/remove-product", {
       billingId,
       productId,
     });
@@ -115,7 +115,7 @@ export const updateProductQuantity = async (
   quantity: number,
 ): Promise<ApiResponse<Billing>> => {
   try {
-    const response = await axiosInstance.put("/billing/update-quantity", {
+    const response = await axiosInstance.put("api/billing/update-quantity", {
       billingId,
       productId,
       quantity,
@@ -150,7 +150,7 @@ export const completeBilling = async (
     }
 
     const response = await axiosInstance.post(
-      `/billing/complete/${billingId}`,
+      `api/billing/complete/${billingId}`,
       payload,
     );
     return response.data;
@@ -167,7 +167,7 @@ export const getBillingById = async (
   billingId: string,
 ): Promise<ApiResponse<Billing>> => {
   try {
-    const response = await axiosInstance.get(`/billing/${billingId}`);
+    const response = await axiosInstance.get(`api/billing/${billingId}`);
     console.log("Get billing response:", response.data);
     return response.data;
   } catch (error) {
@@ -183,7 +183,7 @@ export const deleteBilling = async (
   billingId: string,
 ): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/billing/${billingId}`);
+    const response = await axiosInstance.delete(`api/billing/${billingId}`);
     // console.log("Delete billing response:", response.data);
     return response.data;
   } catch (error) {
@@ -199,7 +199,7 @@ export const getCompletedBillings = async (): Promise<
   ApiResponse<Billing[]>
 > => {
   try {
-    const response = await axiosInstance.get("/billing/complete/all");
+    const response = await axiosInstance.get("api/billing/complete/all");
     // console.log("Get completed billings response:", response.data);
     return response.data;
   } catch (error) {
@@ -217,7 +217,7 @@ export const updatePaymentStatus = async (
 ): Promise<ApiResponse<Billing>> => {
   try {
     const response = await axiosInstance.put(
-      `/billing/payment-status/${billingId}`,
+      `api/billing/payment-status/${billingId}`,
       {
         paymentStatus,
       },

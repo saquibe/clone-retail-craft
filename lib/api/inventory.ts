@@ -67,7 +67,7 @@ export const getAllInventory = async (): Promise<
   ApiListResponse<InventoryItem>
 > => {
   try {
-    const response = await axiosInstance.get("/stocks");
+    const response = await axiosInstance.get("api/stocks");
     // console.log("Inventory response:", response.data);
     return response.data;
   } catch (error) {
@@ -82,7 +82,7 @@ export const getAllInventory = async (): Promise<
 // =====================================================
 export const getStockSummary = async (): Promise<StockSummary> => {
   try {
-    const response = await axiosInstance.get("/stocks/summary");
+    const response = await axiosInstance.get("api/stocks/summary");
     return response.data;
   } catch (error) {
     console.error("Get stock summary error:", error);
@@ -96,7 +96,7 @@ export const getStockSummary = async (): Promise<StockSummary> => {
 // =====================================================
 export const getLowStock = async (): Promise<ApiListResponse<LowStockItem>> => {
   try {
-    const response = await axiosInstance.get("/stocks/low-stock");
+    const response = await axiosInstance.get("api/stocks/low-stock");
     return response.data;
   } catch (error) {
     console.error("Get low stock error:", error);
@@ -112,7 +112,7 @@ export const getProductInventory = async (
   productId: string,
 ): Promise<ProductInventory> => {
   try {
-    const response = await axiosInstance.get(`/stocks/${productId}`);
+    const response = await axiosInstance.get(`api/stocks/${productId}`);
     return response.data;
   } catch (error) {
     console.error("Get product inventory error:", error);
@@ -128,7 +128,7 @@ export const addStock = async (
   data: StockOperation,
 ): Promise<StockResponse> => {
   try {
-    const response = await axiosInstance.post("/stocks/add", data);
+    const response = await axiosInstance.post("api/stocks/add", data);
     return response.data;
   } catch (error) {
     console.error("Add stock error:", error);
@@ -144,7 +144,7 @@ export const reduceStock = async (
   data: StockOperation,
 ): Promise<StockResponse> => {
   try {
-    const response = await axiosInstance.post("/stocks/reduce", data);
+    const response = await axiosInstance.post("api/stocks/reduce", data);
     return response.data;
   } catch (error) {
     console.error("Reduce stock error:", error);

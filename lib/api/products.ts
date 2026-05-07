@@ -73,7 +73,7 @@ export const getProducts = async (
 ): Promise<ApiResponse<Product[]>> => {
   try {
     const params = status ? { status } : {};
-    const response = await axiosInstance.get("/products", { params });
+    const response = await axiosInstance.get("api/products", { params });
     return response.data;
   } catch (error) {
     console.error("Get products error:", error);
@@ -88,7 +88,7 @@ export const getProductById = async (
   id: string,
 ): Promise<ApiResponse<Product>> => {
   try {
-    const response = await axiosInstance.get(`/products/${id}`);
+    const response = await axiosInstance.get(`api/products/${id}`);
     return response.data;
   } catch (error) {
     console.error("Get product by ID error:", error);
@@ -103,7 +103,7 @@ export const createProduct = async (
   data: CreateProductData,
 ): Promise<ApiResponse<Product>> => {
   try {
-    const response = await axiosInstance.post("/products", data);
+    const response = await axiosInstance.post("api/products", data);
     return response.data;
   } catch (error) {
     console.error("Create product error:", error);
@@ -119,7 +119,7 @@ export const updateProduct = async (
   data: UpdateProductData,
 ): Promise<ApiResponse<Product>> => {
   try {
-    const response = await axiosInstance.put(`/products/${id}`, data);
+    const response = await axiosInstance.put(`api/products/${id}`, data);
     return response.data;
   } catch (error) {
     console.error("Update product error:", error);
@@ -134,7 +134,7 @@ export const addStock = async (
   data: StockOperation,
 ): Promise<ApiResponse<Product>> => {
   try {
-    const response = await axiosInstance.post("/products/add-stock", data);
+    const response = await axiosInstance.post("api/products/add-stock", data);
     return response.data;
   } catch (error) {
     console.error("Add stock error:", error);
@@ -149,7 +149,10 @@ export const reduceStock = async (
   data: StockOperation,
 ): Promise<ApiResponse<Product>> => {
   try {
-    const response = await axiosInstance.post("/products/reduce-stock", data);
+    const response = await axiosInstance.post(
+      "api/products/reduce-stock",
+      data,
+    );
     return response.data;
   } catch (error) {
     console.error("Reduce stock error:", error);
@@ -164,7 +167,7 @@ export const getLowStockProducts = async (): Promise<
   ApiResponse<Product[]>
 > => {
   try {
-    const response = await axiosInstance.get("/products/low-stock");
+    const response = await axiosInstance.get("api/products/low-stock");
     return response.data;
   } catch (error) {
     console.error("Get low stock products error:", error);
@@ -177,7 +180,7 @@ export const getLowStockProducts = async (): Promise<
 // =====================================================
 export const getStockSummary = async (): Promise<StockSummary> => {
   try {
-    const response = await axiosInstance.get("/products/stock-summary");
+    const response = await axiosInstance.get("api/products/stock-summary");
     return response.data;
   } catch (error) {
     console.error("Get stock summary error:", error);
@@ -190,7 +193,7 @@ export const getStockSummary = async (): Promise<StockSummary> => {
 // =====================================================
 export const deleteProduct = async (id: string): Promise<ApiResponse<null>> => {
   try {
-    const response = await axiosInstance.delete(`/products/${id}`);
+    const response = await axiosInstance.delete(`api/products/${id}`);
     return response.data;
   } catch (error) {
     console.error("Delete product error:", error);
@@ -205,7 +208,7 @@ export const searchProducts = async (
   searchTerm: string,
 ): Promise<ApiResponse<Product[]>> => {
   try {
-    const response = await axiosInstance.get("/products/search", {
+    const response = await axiosInstance.get("api/products/search", {
       params: { search: searchTerm },
     });
     return response.data;
@@ -220,7 +223,7 @@ export const searchProducts = async (
 // =====================================================
 export const exportProductsToCSV = async (): Promise<Blob> => {
   try {
-    const response = await axiosInstance.get("/products/export/csv", {
+    const response = await axiosInstance.get("api/products/export/csv", {
       responseType: "blob",
     });
     return response.data;

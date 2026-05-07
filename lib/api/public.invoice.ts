@@ -44,7 +44,7 @@ export const getPublicInvoice = async (
 ): Promise<{ success: boolean; data?: PublicInvoice; message?: string }> => {
   try {
     const response = await axiosInstance.get(
-      `/public-invoice/?INV=${shortInvoiceCode}`,
+      `api/public-invoice/?INV=${shortInvoiceCode}`,
     );
     return response.data;
   } catch (error: any) {
