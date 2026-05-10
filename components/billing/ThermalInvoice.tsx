@@ -1,3 +1,4 @@
+//app/components/billing/ThermalInvoice.tsx
 "use client";
 
 import { useEffect, useRef } from "react";

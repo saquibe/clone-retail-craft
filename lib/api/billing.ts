@@ -79,7 +79,10 @@ export const addProductToBilling = async (
     if (productId) {
       payload.productId = productId;
     }
-    const response = await axiosInstance.post("api/billing/add-product", payload);
+    const response = await axiosInstance.post(
+      "api/billing/add-product",
+      payload,
+    );
     return response.data;
   } catch (error) {
     console.error("Add product error:", error);
@@ -136,12 +139,14 @@ export const completeBilling = async (
   discountAmount: number = 0,
   freightCharge: number = 0,
   remarks?: string,
+  invoiceType: "J1" | "J2" = "J1",
 ): Promise<ApiResponse<Billing>> => {
   try {
     const payload: any = {
       paymentMode,
       discountAmount,
       freightCharge,
+      invoiceType,
     };
 
     // Add remarks only for Pay Later

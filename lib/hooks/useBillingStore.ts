@@ -324,9 +324,10 @@ export const useBillingStore = () => {
   // Generate invoice (complete billing)
   const generateInvoice = async (
     paymentMode: string,
-    discountPercentage: number = 0,
+    discountAmount: number = 0,
     freightCharge: number = 0,
     remarks?: string,
+    invoiceType: "J1" | "J2" = "J1",
   ): Promise<string | null> => {
     if (!billingId) {
       toast.error("No active billing session");
@@ -343,6 +344,11 @@ export const useBillingStore = () => {
       return null;
     }
 
+    if (!invoiceType) {
+      toast.error("Please select invoice type");
+      return null;
+    }
+
     if (paymentMode === "Pay Later" && (!remarks || remarks.trim() === "")) {
       toast.error("Please enter remarks for Pay Later payment");
       return null;
@@ -353,9 +359,10 @@ export const useBillingStore = () => {
       const response = await completeBilling(
         billingId,
         paymentMode,
-        discountPercentage,
+        discountAmount,
         freightCharge,
         remarks,
+        invoiceType,
       );
       if (response.success) {
         toast.success(response.message || "Invoice generated successfully");

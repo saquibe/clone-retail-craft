@@ -55,8 +55,8 @@ import {
   completeBilling,
   getBillingById,
 } from "@/lib/api/billing";
-import { ThermalInvoice } from "@/components/billing/ThermalInvoice";
 import BillingPageSkeleton from "@/components/skeletons/BillingPageSkeleton";
+import { A4Invoice } from "@/components/billing/A4Invoice";
 
 interface BillingItem extends Product {
   cartQuantity: number;
@@ -112,6 +112,7 @@ export default function BillingPage() {
   const [showRemarksInput, setShowRemarksInput] = useState(false);
   const [isAddingFromEnter, setIsAddingFromEnter] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [invoiceType, setInvoiceType] = useState<"J1" | "J2">("J1");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -226,12 +227,10 @@ export default function BillingPage() {
       if (fullProduct) {
         const success = await addToCart(fullProduct, product._id);
         if (success) {
-          // toast.success(`${fullProduct.productName} added to cart`);
           setShowProductSelectionDialog(false);
           setMultipleProducts([]);
           setProductSearch("");
 
-          // Refocus the input after adding from selection dialog
           setTimeout(() => {
             barcodeInputRef.current?.focus();
           }, 100);
@@ -265,14 +264,12 @@ export default function BillingPage() {
 
     if (!cleanInput) return;
 
-    // Prevent double execution
     if (isAddingFromEnter) return;
 
     setIsAddingFromEnter(true);
     setLoading(true);
 
     try {
-      // Search for the product by barcode/name
       const searchResponse = await searchProducts(cleanInput);
 
       if (
@@ -290,7 +287,6 @@ export default function BillingPage() {
 
       const foundProducts = searchResponse.data;
 
-      // If multiple products found
       if (foundProducts.length > 1) {
         setMultipleProducts(foundProducts);
         setSelectedBarcode(cleanInput);
@@ -302,12 +298,10 @@ export default function BillingPage() {
         return;
       }
 
-      // Single product found - add to cart
       const product = foundProducts[0];
       const result = await addToCart(product);
 
       if (result) {
-        // toast.success(`${product.productName} added to cart`);
         setProductSearch("");
         setTimeout(() => {
           barcodeInputRef.current?.focus();
@@ -345,11 +339,10 @@ export default function BillingPage() {
     try {
       const result = await addToCart(product);
       if (result) {
-        toast.success(`${product.productName} added to cart`);
+        // toast.success(`${product.productName} added to cart`);
         setProductSearch("");
         setShowSearchResults(false);
 
-        // Refocus the input after adding product
         setTimeout(() => {
           barcodeInputRef.current?.focus();
         }, 100);
@@ -397,7 +390,7 @@ export default function BillingPage() {
     }
   };
 
-  // Debounced search to avoid too many API calls
+  // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (productSearch) {
@@ -496,6 +489,11 @@ export default function BillingPage() {
       return;
     }
 
+    if (!invoiceType) {
+      toast.error("Please select invoice type");
+      return;
+    }
+
     if (
       paymentMode === "Pay Later" &&
       (!payLaterRemarks || payLaterRemarks.trim() === "")
@@ -512,6 +510,7 @@ export default function BillingPage() {
         discountAmount,
         freightCharge,
         payLaterRemarks,
+        invoiceType,
       );
 
       if (billingId) {
@@ -523,6 +522,7 @@ export default function BillingPage() {
           setFreightCharge(0);
           setPayLaterRemarks("");
           setShowRemarksInput(false);
+          setInvoiceType("J1");
         }
       }
     } catch (error) {
@@ -584,6 +584,37 @@ export default function BillingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Left Column - Customer & Products */}
         <div className="lg:col-span-2 space-y-4 md:space-y-6">
+          {/* Invoice Type Selection - Show by default */}
+          <div className="space-y-2">
+            <Label className="text-xs md:text-sm font-bold text-gray-800">
+              Invoice Type <span className="text-red-500">*</span>
+            </Label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="invoiceType"
+                  value="J1"
+                  checked={invoiceType === "J1"}
+                  onChange={() => setInvoiceType("J1")}
+                  className="w-4 h-4 text-indigo-600"
+                />
+                <span className="text-sm font-medium text-gray-700">J1</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="invoiceType"
+                  value="J2"
+                  checked={invoiceType === "J2"}
+                  onChange={() => setInvoiceType("J2")}
+                  className="w-4 h-4 text-indigo-600"
+                />
+                <span className="text-sm font-medium text-gray-700">J2</span>
+              </label>
+            </div>
+          </div>
+
           {/* Customer Selection Card */}
           <Card
             className={`print:hidden border-2 ${
@@ -620,7 +651,6 @@ export default function BillingPage() {
                     disabled={!!selectedCustomer}
                   />
 
-                  {/* Search Results Dropdown */}
                   {showCustomerResults &&
                     customerSearch.trim() !== "" &&
                     !selectedCustomer && (
@@ -697,7 +727,6 @@ export default function BillingPage() {
                     )}
                 </div>
 
-                {/* Add New Customer Button */}
                 <Button
                   onClick={() => setShowNewCustomerDialog(true)}
                   disabled={!!selectedCustomer}
@@ -832,7 +861,6 @@ export default function BillingPage() {
                   )}
                 </div>
 
-                {/* Search Results Dropdown */}
                 {showSearchResults &&
                   selectedCustomer &&
                   productSearch.trim() !== "" && (
@@ -911,7 +939,7 @@ export default function BillingPage() {
             </CardContent>
           </Card>
 
-          {/* Cart Table Card - Mobile Responsive */}
+          {/* Cart Table Card */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center flex-wrap gap-2">
@@ -1132,7 +1160,6 @@ export default function BillingPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 md:space-y-4">
-              {/* Customer Type Badge */}
               {selectedCustomer && (
                 <div className="flex justify-between items-center">
                   <span className="text-xs md:text-sm text-gray-600">
@@ -1150,14 +1177,12 @@ export default function BillingPage() {
                 </div>
               )}
 
-              {/* Price Breakdown */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Base Amount:</span>
                   <span className="font-medium">₹{baseTotal.toFixed(2)}</span>
                 </div>
 
-                {/* Discount on Base Amount - Now Flat Amount */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs md:text-sm text-gray-600">
@@ -1171,7 +1196,6 @@ export default function BillingPage() {
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val) && val >= 0) {
-                          // Optional: Add max validation
                           if (val <= baseTotal) {
                             setDiscountAmount(val);
                           } else {
@@ -1195,7 +1219,6 @@ export default function BillingPage() {
                   )}
                 </div>
 
-                {/* Amount after Discount */}
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Amount after Discount:</span>
                   <span className="font-medium">
@@ -1400,6 +1423,7 @@ export default function BillingPage() {
                     !selectedCustomer ||
                     cart.length === 0 ||
                     !paymentMode ||
+                    !invoiceType ||
                     isLoading ||
                     (paymentMode === "Pay Later" && !payLaterRemarks.trim())
                   }
@@ -1510,8 +1534,7 @@ export default function BillingPage() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="mt-2 w-full sm:w-auto cursor-pointer bg-indigo-600 text-white hover:bg-indigo-8
-                          00 hover:text-white"
+                          className="mt-2 w-full sm:w-auto cursor-pointer"
                         >
                           Select
                         </Button>
@@ -1525,95 +1548,9 @@ export default function BillingPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Print Layout */}
-      <div
-        className="hidden print:block mt-10"
-        style={{
-          fontFamily: "Arial, sans-serif",
-          wordWrap: "break-word",
-          wordBreak: "break-word",
-          overflowWrap: "break-word",
-        }}
-      >
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Retail Craft</h1>
-          <p>Invoice #{format(new Date(), "yyyyMMddHHmmss")}</p>
-          <p>Date: {format(new Date(), "dd MMM yyyy, hh:mm a")}</p>
-        </div>
-
-        <div className="mb-4">
-          <h2 className="font-bold">Customer Details:</h2>
-          {selectedCustomer ? (
-            <div className="text-sm">
-              <p>Name: {selectedCustomer.name}</p>
-              {selectedCustomer.customerType === "B2B" && (
-                <>
-                  <p>Company: {selectedCustomer.companyName}</p>
-                  <p>GST: {selectedCustomer.gstIn}</p>
-                </>
-              )}
-              <p>Type: {selectedCustomer.customerType}</p>
-              <p>Mobile: {selectedCustomer.mobile}</p>
-            </div>
-          ) : (
-            <p className="text-sm">No customer selected</p>
-          )}
-        </div>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Product</th>
-              <th className="text-right py-2">Price</th>
-              <th className="text-center py-2">Qty</th>
-              <th className="text-right py-2">Tax %</th>
-              <th className="text-right py-2">Tax Amt</th>
-              <th className="text-right py-2">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.map((item) => {
-              const price =
-                selectedCustomer?.customerType === "B2B"
-                  ? item.b2bSalePrice || 0
-                  : item.b2cSalePrice || 0;
-              const tax = item.salesTax || 0;
-              const priceWithQty = price * (item.cartQuantity || 0);
-              const taxAmount = (priceWithQty * tax) / (100 + tax);
-              const itemTotal = priceWithQty;
-
-              return (
-                <tr key={item._id} className="border-b">
-                  <td className="py-2">{item.productName}</td>
-                  <td className="text-right py-2">₹{price.toFixed(2)}</td>
-                  <td className="text-center py-2">{item.cartQuantity || 0}</td>
-                  <td className="text-right py-2">{tax}%</td>
-                  <td className="text-right py-2">₹{taxAmount.toFixed(2)}</td>
-                  <td className="text-right py-2">₹{itemTotal.toFixed(2)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        <div className="mt-4 text-right space-y-1">
-          <p>Base Amount: ₹{baseTotal.toFixed(2)}</p>
-          <p>Total Tax: ₹{taxTotal.toFixed(2)}</p>
-          <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
-          {discountAmount > 0 && <p>Discount: -₹{discountAmount.toFixed(2)}</p>}
-          <p className="text-lg font-bold">
-            Grand Total: ₹{grandTotal.toFixed(2)}
-          </p>
-          <p>Paid: ₹{paidAmount.toFixed(2)}</p>
-          <p>Balance: ₹{balance.toFixed(2)}</p>
-        </div>
-
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Thank you for your business!</p>
-        </div>
-      </div>
+      {/* A4 Invoice Dialog */}
       {billingData && (
-        <ThermalInvoice
+        <A4Invoice
           billing={billingData}
           onPrinted={() => {
             setBillingData(null);

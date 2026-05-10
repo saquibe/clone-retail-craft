@@ -67,6 +67,7 @@ import { ThermalInvoice } from "@/components/billing/ThermalInvoice";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { A4Invoice } from "@/components/billing/A4Invoice";
 
 // Counter Animation Component
 const AnimatedCounter = ({
@@ -967,12 +968,12 @@ export default function CustomerInvoicesPage() {
 
       {/* View Invoice Dialog */}
       <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Invoice {selectedBilling?.invoiceNumber}</DialogTitle>
           </DialogHeader>
           {selectedBilling && (
-            <ThermalInvoice
+            <A4Invoice
               billing={selectedBilling}
               onPrinted={() => setShowInvoiceDialog(false)}
             />
