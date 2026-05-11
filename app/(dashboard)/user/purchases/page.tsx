@@ -1505,7 +1505,7 @@ export default function PurchasesPage() {
             <DialogTitle>Add New Supplier</DialogTitle>
           </DialogHeader>
           <SupplierForm
-            initialData={supplierSearch ? { name: supplierSearch } : undefined}
+            // initialData={supplierSearch ? { name: supplierSearch } : undefined}
             onSubmit={handleCreateSupplier}
             isLoading={isLoadingSuppliers}
             onCancel={() => setShowNewSupplierDialog(false)}

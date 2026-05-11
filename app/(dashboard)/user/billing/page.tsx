@@ -1550,12 +1550,19 @@ export default function BillingPage() {
 
       {/* A4 Invoice Dialog */}
       {billingData && (
-        <A4Invoice
-          billing={billingData}
-          onPrinted={() => {
-            setBillingData(null);
-          }}
-        />
+        <Dialog open={!!billingData} onOpenChange={() => setBillingData(null)}>
+          <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Invoice {billingData?.invoiceNumber}</DialogTitle>
+            </DialogHeader>
+            <A4Invoice
+              billing={billingData}
+              onPrinted={() => {
+                setBillingData(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
