@@ -18,10 +18,8 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
   const handlePrint = () => {
     if (!invoiceRef.current) return;
 
-    // Get the HTML content of the invoice
     const printContent = invoiceRef.current.outerHTML;
 
-    // Create a hidden iframe for printing (no preview window)
     const iframe = document.createElement("iframe");
     iframe.style.position = "absolute";
     iframe.style.width = "0px";
@@ -188,9 +186,42 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
   const roundedGrandTotal = Math.round(finalTotal);
   const subTotal = billing.subTotal ?? 0;
   const discountAmount = billing.discountAmount ?? 0;
+  const discountPercentage = billing.discount ?? 0;
   const freightCharge = billing.freightCharge ?? 0;
   const totalTax = billing.totalTax ?? 0;
   const amountAfterDiscount = subTotal - discountAmount;
+
+  // Helper function to safely get branch details
+  const getBranchName = () => {
+    if (billing.branchId && typeof billing.branchId === "object") {
+      return billing.branchId.branchName || "RETAIL CRAFT";
+    }
+    return "RETAIL CRAFT";
+  };
+
+  const getBranchAddress = () => {
+    if (billing.branchId && typeof billing.branchId === "object") {
+      const { address, city, state, pincode } = billing.branchId;
+      return `${address || "Store Address"}, ${city || "City"}, ${
+        state || "State"
+      } - ${pincode || "000000"}`;
+    }
+    return "Store Address, City, State - 000000";
+  };
+
+  const getBranchPhone = () => {
+    if (billing.branchId && typeof billing.branchId === "object") {
+      return billing.branchId.branchPhoneNumber || "N/A";
+    }
+    return "N/A";
+  };
+
+  const getBranchGST = () => {
+    if (billing.branchId && typeof billing.branchId === "object") {
+      return billing.branchId.branchGstNumber || "N/A";
+    }
+    return "N/A";
+  };
 
   // Group items by tax rate
   const itemsByTax = billing.items.reduce((acc: any, item) => {
@@ -224,19 +255,13 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
       </div>
 
       <div ref={invoiceRef} className="invoice-container">
-        {/* Header */}
+        {/* Header - Fixed to handle missing branch details */}
         <div className="header">
-          <div className="store-name">
-            {billing.branchId?.branchName || "RETAIL CRAFT"}
-          </div>
+          <div className="store-name">{getBranchName()}</div>
           <div className="store-details">
-            {billing.branchId?.address || "Store Address"},{" "}
-            {billing.branchId?.city || "City"},{" "}
-            {billing.branchId?.state || "State"} -{" "}
-            {billing.branchId?.pincode || "000000"}
+            {getBranchAddress()}
             <br />
-            Phone: {billing.branchId?.branchPhoneNumber || "N/A"} | GST:{" "}
-            {billing.branchId?.branchGstNumber || "N/A"}
+            Phone: {getBranchPhone()} | GST: {getBranchGST()}
           </div>
         </div>
 
@@ -247,7 +272,7 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
           <div className="info-box">
             <div className="info-label">Invoice Details</div>
             <div>
-              <strong>Invoice No:</strong> {billing.invoiceNumber}
+              <strong>Invoice No:</strong> {billing.invoiceNumber || "N/A"}
             </div>
             <div>
               <strong>Invoice Date:</strong>{" "}
@@ -264,10 +289,10 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
           <div className="info-box">
             <div className="info-label">Customer Details</div>
             <div>
-              <strong>Name:</strong> {billing.customerId?.name}
+              <strong>Name:</strong> {billing.customerId?.name || "N/A"}
             </div>
             <div>
-              <strong>Mobile:</strong> {billing.customerId?.mobile}
+              <strong>Mobile:</strong> {billing.customerId?.mobile || "N/A"}
             </div>
             {billing.customerId?.email && (
               <div>
@@ -275,7 +300,7 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
               </div>
             )}
             <div>
-              <strong>Type:</strong> {billing.customerId?.customerType}
+              <strong>Type:</strong> {billing.customerId?.customerType || "N/A"}
             </div>
           </div>
         </div>
@@ -350,10 +375,10 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
             <span>{formatCurrency(subTotal)}</span>
           </div>
 
-          {discountAmount > 0 && (
+          {discountPercentage > 0 && (
             <>
               <div className="total-row">
-                <span>Discount:</span>
+                <span>Discount ({discountPercentage}%):</span>
                 <span style={{ color: "#e74c3c" }}>
                   -{formatCurrency(discountAmount)}
                 </span>
@@ -373,7 +398,9 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
           {freightCharge > 0 && (
             <div className="total-row">
               <span>Freight Charge:</span>
-              <span>+{formatCurrency(freightCharge)}</span>
+              <span className="text-blue-600">
+                +{formatCurrency(freightCharge)}
+              </span>
             </div>
           )}
 

@@ -459,7 +459,7 @@ export default function PurchasesPage() {
     }
 
     const success = await completePurchaseInvoice(
-      discount,
+      discount, // Send percentage value
       freightCharge,
       paymentMode,
       payLaterRemarks,
@@ -1204,33 +1204,28 @@ export default function PurchasesPage() {
                   </span>
                 </div>
 
-                {/* Discount on Base Amount - Flat Amount */}
+                {/* Discount on Base Amount - Percentage */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2 flex-1">
-                    <span className="text-sm text-gray-600">Discount (₹):</span>
+                    <span className="text-sm text-gray-600">Discount (%):</span>
                     <Input
                       type="number"
                       min="0"
+                      max="100"
                       step="1"
                       value={discount}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
-                        if (!isNaN(val) && val >= 0) {
-                          if (val <= totals.subTotal) {
-                            setDiscount(val);
-                          } else {
-                            toast.error(
-                              `Discount cannot exceed ₹${totals.subTotal.toFixed(
-                                2,
-                              )}`,
-                            );
-                          }
+                        if (!isNaN(val) && val >= 0 && val <= 100) {
+                          setDiscount(val);
+                        } else if (val > 100) {
+                          toast.error("Discount cannot exceed 100%");
                         }
                       }}
-                      className="w-28 h-8 text-sm"
+                      className="w-20 h-8 text-sm"
                       disabled={items.length === 0}
                     />
-                    <span className="text-sm text-gray-500">₹</span>
+                    <span className="text-sm text-gray-500">%</span>
                   </div>
                   {discount > 0 && (
                     <div className="text-right">

@@ -19,7 +19,7 @@ interface BillingItem extends Product {
 interface BillingSession {
   selectedCustomer: Customer | null;
   cart: BillingItem[];
-  discountAmount: number;
+  discountPercentage: number;
   paymentMethod: "cash" | "card" | "upi";
   paidAmount: number;
   billingId?: string;
@@ -33,7 +33,7 @@ export const useBillingStore = () => {
     null,
   );
   const [cart, setCart] = useState<BillingItem[]>([]);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "upi">(
     "cash",
   );
@@ -56,7 +56,7 @@ export const useBillingStore = () => {
         const session: BillingSession = JSON.parse(savedSession);
         setSelectedCustomer(session.selectedCustomer);
         setCart(session.cart);
-        setDiscountAmount(session.discountAmount);
+        setDiscountPercentage(session.discountPercentage);
         setPaymentMethod(session.paymentMethod);
         setPaidAmount(session.paidAmount);
         setBillingId(session.billingId);
@@ -74,7 +74,7 @@ export const useBillingStore = () => {
     const session: BillingSession = {
       selectedCustomer,
       cart,
-      discountAmount,
+      discountPercentage,
       paymentMethod,
       paidAmount,
       billingId,
@@ -89,7 +89,7 @@ export const useBillingStore = () => {
   }, [
     selectedCustomer,
     cart,
-    discountAmount,
+    discountPercentage,
     paymentMethod,
     paidAmount,
     billingId,
@@ -133,7 +133,7 @@ export const useBillingStore = () => {
 
     setSelectedCustomer(null);
     setCart([]);
-    setDiscountAmount(0);
+    setDiscountPercentage(0);
     setPaymentMethod("cash");
     setPaidAmount(0);
     setBillingId(undefined);
@@ -359,7 +359,7 @@ export const useBillingStore = () => {
       const response = await completeBilling(
         billingId,
         paymentMode,
-        discountAmount,
+        discountPercentage,
         freightCharge,
         remarks,
         invoiceType,
@@ -368,7 +368,7 @@ export const useBillingStore = () => {
         toast.success(response.message || "Invoice generated successfully");
         setSelectedCustomer(null);
         setCart([]);
-        setDiscountAmount(0);
+        setDiscountPercentage(0);
         setPaymentMethod("cash");
         setPaidAmount(0);
         setBillingId(undefined);
@@ -391,7 +391,7 @@ export const useBillingStore = () => {
   return {
     selectedCustomer,
     cart,
-    discountAmount,
+    discountPercentage,
     paymentMethod,
     paidAmount,
     billingId,
@@ -400,7 +400,7 @@ export const useBillingStore = () => {
     updatingProductId,
     addingProduct,
     setSelectedCustomer: updateCustomer,
-    setDiscountAmount,
+    setDiscountPercentage,
     setPaymentMethod,
     setPaidAmount,
     addToCart,

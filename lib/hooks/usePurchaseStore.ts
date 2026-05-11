@@ -56,6 +56,7 @@ export const usePurchaseStore = () => {
   const [updatingAction, setUpdatingAction] = useState<
     "increment" | "decrement" | "remove" | null
   >(null);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
 
   // Load session from localStorage on mount
   useEffect(() => {
@@ -498,9 +499,10 @@ export const usePurchaseStore = () => {
   );
 
   // Complete purchase with payment details
+  // Complete purchase with payment details
   const completePurchaseInvoice = useCallback(
     async (
-      discountAmount: number = 0,
+      discountPercentage: number = 0,
       freightChargeValue: number = 0,
       paymentMode: string = "Cash",
       remarks?: string,
@@ -543,7 +545,7 @@ export const usePurchaseStore = () => {
       try {
         const response = await completePurchase(
           purchaseId,
-          discountAmount,
+          discountPercentage,
           freightChargeValue,
           paymentMode,
           remarks,
@@ -557,7 +559,7 @@ export const usePurchaseStore = () => {
           setInvoiceNumber("");
           setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
           setPlaceOfSupply("Telangana");
-          setDiscount(0);
+          setDiscountPercentage(0);
           setFreightCharge(0);
           setPurchaseId(undefined);
           setPurchaseData(null);
@@ -588,11 +590,10 @@ export const usePurchaseStore = () => {
       ) || 0;
 
     const totalTax = items?.reduce((sum, item) => sum + item.taxAmount, 0) || 0;
-    const discountAmount = discount;
-    const afterDiscount = baseTotal - discountAmount;
-    const finalTotal = afterDiscount + totalTax + freightCharge;
 
-    // Rounded values
+    const discountAmountCalculated = (baseTotal * discountPercentage) / 100;
+    const afterDiscount = baseTotal - discountAmountCalculated;
+    const finalTotal = afterDiscount + totalTax + freightCharge;
     const roundedFinalTotal = Math.round(finalTotal);
     const roundOffAmount = roundedFinalTotal - finalTotal;
 
@@ -600,7 +601,7 @@ export const usePurchaseStore = () => {
       subTotal: baseTotal,
       totalTax,
       grandTotal: baseTotal + totalTax,
-      discountAmount,
+      discountAmount: discountAmountCalculated,
       afterDiscount,
       finalTotal,
       roundedFinalTotal,
@@ -617,7 +618,7 @@ export const usePurchaseStore = () => {
     invoiceDate,
     placeOfSupply,
     reverseCharge,
-    discount,
+    discount: discountPercentage,
     freightCharge,
     purchaseId,
     referenceInvoiceNumber,
@@ -633,7 +634,7 @@ export const usePurchaseStore = () => {
     setInvoiceDate,
     setPlaceOfSupply,
     setReverseCharge,
-    setDiscount,
+    setDiscount: setDiscountPercentage,
     setFreightCharge,
     scanBarcode,
     updateQuantity,

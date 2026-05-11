@@ -179,16 +179,20 @@ export const updatePurchaseQuantity = async (
 // =====================================================
 // POST /api/purchase-invoice/complete/:id - Complete purchase invoice
 // =====================================================
-// Update completePurchase function
+// lib/api/purchases.ts - completePurchase function
 export const completePurchase = async (
   id: string,
-  discountAmount: number = 0,
+  discountPercentage: number = 0, // This is percentage
   freightCharge: number = 0,
   paymentMode: string = "Cash",
   remarks?: string,
 ): Promise<ApiResponse<PurchaseInvoice>> => {
   try {
-    const payload: any = { discountAmount, freightCharge, paymentMode };
+    const payload: any = {
+      discount: discountPercentage, // Send as 'discount' to backend
+      freightCharge,
+      paymentMode,
+    };
     if (paymentMode === "Pay Later" && remarks) {
       payload.remarks = remarks;
     }

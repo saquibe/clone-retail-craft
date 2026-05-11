@@ -136,7 +136,7 @@ export const updateProductQuantity = async (
 export const completeBilling = async (
   billingId: string,
   paymentMode: string,
-  discountAmount: number = 0,
+  discountPercentage: number = 0,
   freightCharge: number = 0,
   remarks?: string,
   invoiceType: "J1" | "J2" = "J1",
@@ -144,7 +144,7 @@ export const completeBilling = async (
   try {
     const payload: any = {
       paymentMode,
-      discountAmount,
+      discount: discountPercentage,
       freightCharge,
       invoiceType,
     };
@@ -189,7 +189,6 @@ export const deleteBilling = async (
 ): Promise<ApiResponse<null>> => {
   try {
     const response = await axiosInstance.delete(`api/billing/${billingId}`);
-    // console.log("Delete billing response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Delete billing error:", error);

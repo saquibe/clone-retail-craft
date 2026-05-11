@@ -754,7 +754,7 @@ export default function SupplierInvoicesPage() {
                                       </div>
 
                                       {/* Discount */}
-                                      {(purchase.discountAmount ?? 0) > 0 && (
+                                      {(purchase.discount ?? 0) > 0 && (
                                         <>
                                           <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">

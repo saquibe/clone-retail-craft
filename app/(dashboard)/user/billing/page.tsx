@@ -70,14 +70,14 @@ export default function BillingPage() {
   const {
     selectedCustomer,
     cart,
-    discountAmount,
+    discountPercentage,
     paidAmount,
     isLoaded,
     billingId,
     updatingProductId,
     addingProduct,
     setSelectedCustomer,
-    setDiscountAmount,
+    setDiscountPercentage,
     addToCart,
     updateQuantity,
     removeFromCart,
@@ -426,7 +426,6 @@ export default function BillingPage() {
   // Calculate totals
   const subtotal = useMemo(() => {
     if (!selectedCustomer) return 0;
-
     return cart.reduce((sum, item) => {
       const price =
         selectedCustomer.customerType === "B2B"
@@ -438,7 +437,6 @@ export default function BillingPage() {
 
   const taxTotal = useMemo(() => {
     if (!selectedCustomer) return 0;
-
     return cart.reduce((sum, item) => {
       const price =
         selectedCustomer.customerType === "B2B"
@@ -446,14 +444,14 @@ export default function BillingPage() {
           : item.b2cSalePrice || 0;
       const tax = item.salesTax || 0;
       const priceWithQty = price * (item.cartQuantity || 0);
-      const taxAmount = (priceWithQty * tax) / (100 + tax);
-      return sum + (isNaN(taxAmount) ? 0 : taxAmount);
+      const baseAmount = priceWithQty / (1 + tax / 100);
+      const taxAmount = priceWithQty - baseAmount;
+      return sum + taxAmount;
     }, 0);
   }, [cart, selectedCustomer]);
 
   const baseTotal = useMemo(() => {
     if (!selectedCustomer) return 0;
-
     return cart.reduce((sum, item) => {
       const price =
         selectedCustomer.customerType === "B2B"
@@ -461,16 +459,17 @@ export default function BillingPage() {
           : item.b2cSalePrice || 0;
       const tax = item.salesTax || 0;
       const priceWithQty = price * (item.cartQuantity || 0);
-      const taxAmount = (priceWithQty * tax) / (100 + tax);
-      const baseAmount = priceWithQty - taxAmount;
-      return sum + (isNaN(baseAmount) ? 0 : baseAmount);
+      const baseAmount = priceWithQty / (1 + tax / 100);
+      return sum + baseAmount;
     }, 0);
   }, [cart, selectedCustomer]);
 
-  const grandTotal = subtotal - discountAmount + freightCharge;
-  const balance = paidAmount - grandTotal;
+  const discountAmountCalculated = (baseTotal * discountPercentage) / 100;
+  const grandTotal =
+    baseTotal - discountAmountCalculated + taxTotal + freightCharge;
   const roundedGrandTotal = Math.round(grandTotal);
   const roundOffAmount = roundedGrandTotal - grandTotal;
+  const balance = paidAmount - roundedGrandTotal;
 
   // Handle generate invoice
   const handleGenerateInvoice = async () => {
@@ -507,7 +506,7 @@ export default function BillingPage() {
     try {
       const billingId = await generateInvoice(
         paymentMode,
-        discountAmount,
+        discountPercentage,
         freightCharge,
         payLaterRemarks,
         invoiceType,
@@ -515,7 +514,6 @@ export default function BillingPage() {
 
       if (billingId) {
         const response = await getBillingById(billingId);
-
         if (response.success && response.data) {
           setBillingData(response.data);
           setPaymentMode("");
@@ -1183,49 +1181,49 @@ export default function BillingPage() {
                   <span className="font-medium">₹{baseTotal.toFixed(2)}</span>
                 </div>
 
+                {/* Discount on Base Amount - Percentage */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs md:text-sm text-gray-600">
-                      Discount (₹):
+                      Discount (%):
                     </span>
                     <Input
                       type="number"
                       min="0"
+                      max="100"
                       step="1"
-                      value={discountAmount}
+                      value={discountPercentage}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
-                        if (!isNaN(val) && val >= 0) {
-                          if (val <= baseTotal) {
-                            setDiscountAmount(val);
-                          } else {
-                            toast.error(
-                              `Discount cannot exceed ₹${baseTotal.toFixed(2)}`,
-                            );
-                          }
+                        if (!isNaN(val) && val >= 0 && val <= 100) {
+                          setDiscountPercentage(val);
+                        } else if (val > 100) {
+                          toast.error("Discount cannot exceed 100%");
                         }
                       }}
-                      className="w-28 h-8 text-sm"
+                      className="w-20 h-8 text-sm"
                       disabled={cart.length === 0}
                     />
-                    <span className="text-xs text-gray-500">₹</span>
+                    <span className="text-xs text-gray-500">%</span>
                   </div>
-                  {discountAmount > 0 && (
+                  {discountPercentage > 0 && (
                     <div className="text-right">
                       <span className="ml-2 font-medium text-red-600 text-xs md:text-sm">
-                        -₹{discountAmount.toFixed(2)}
+                        -₹{discountAmountCalculated.toFixed(2)}
                       </span>
                     </div>
                   )}
                 </div>
 
+                {/* Amount after Discount */}
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Amount after Discount:</span>
                   <span className="font-medium">
-                    ₹{(baseTotal - discountAmount).toFixed(2)}
+                    ₹{(baseTotal - discountAmountCalculated).toFixed(2)}
                   </span>
                 </div>
 
+                {/* Tax Breakdown */}
                 <div className="space-y-1 pt-2">
                   <div className="flex justify-between text-xs md:text-sm">
                     <span className="text-gray-600">SGST:</span>
@@ -1245,6 +1243,7 @@ export default function BillingPage() {
                   </div>
                 </div>
 
+                {/* Freight Charge */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs md:text-sm text-gray-600">
@@ -1277,6 +1276,7 @@ export default function BillingPage() {
 
                 <Separator className="my-2" />
 
+                {/* Grand Total */}
                 <div className="flex justify-between font-bold text-base md:text-lg">
                   <span>Grand Total:</span>
                   <span className="text-indigo-600">
@@ -1284,6 +1284,7 @@ export default function BillingPage() {
                   </span>
                 </div>
 
+                {/* Rounded Off */}
                 {roundOffAmount !== 0 && (
                   <div className="flex justify-between text-xs md:text-sm">
                     <span className="text-gray-600">Rounded Off:</span>
@@ -1299,6 +1300,7 @@ export default function BillingPage() {
                   </div>
                 )}
 
+                {/* Final Rounded Total */}
                 <div className="flex justify-between font-bold text-lg md:text-xl pt-2 border-t-2 border-gray-200">
                   <span>Rounded Total:</span>
                   <span className="text-green-600">
