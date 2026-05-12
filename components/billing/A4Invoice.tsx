@@ -314,6 +314,9 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
               <th style={{ width: "10%" }} className="text-center">
                 Qty
               </th>
+              <th style={{ width: "10%" }} className="text-center">
+                Unit
+              </th>
               <th style={{ width: "20%" }} className="text-right">
                 Price
               </th>
@@ -333,6 +336,7 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
                   </div>
                 </td>
                 <td className="text-center">{item.quantity}</td>
+                <td className="text-center">Pcs.</td>
                 <td className="text-right">{formatCurrency(item.price)}</td>
                 <td className="text-right">
                   {formatCurrency(item.price * item.quantity)}

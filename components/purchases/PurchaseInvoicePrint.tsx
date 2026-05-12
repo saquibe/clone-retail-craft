@@ -232,72 +232,71 @@ export function PurchaseInvoicePrint({
         {/* Summary */}
         <div className="text-right space-y-1 border-t-2 border-black pt-4">
           <p className="text-sm">
-            <span className="font-bold inline-block w-32">Base Amount:</span>
+            <span className="font-bold w-32">Base Amount:</span>
             <span className="inline-block w-32">
               ₹{purchase.subTotal?.toFixed(2) || "0.00"}
             </span>
           </p>
 
           {/* Discount Section */}
-          {purchase.discountAmount && purchase.discountAmount > 0 && (
+          {Number(purchase.discountAmount) > 0 && (
             <>
               <p className="text-sm">
-                <span className="font-bold inline-block w-32">Discount:</span>
+                <span className="font-bold w-32">Discount:</span>
                 <span className="inline-block w-32 text-red-600">
-                  -₹{purchase.discountAmount?.toFixed(2) || "0.00"}
+                  -₹{Number(purchase.discountAmount).toFixed(2)}
                 </span>
               </p>
+
               <p className="text-sm">
-                <span className="font-bold inline-block w-32">
-                  Amount after Discount:
-                </span>
+                <span className="font-bold w-32">Amount after Discount:</span>
                 <span className="inline-block w-32">
                   ₹
                   {(
-                    (purchase.subTotal || 0) - (purchase.discountAmount || 0)
+                    (Number(purchase.subTotal) || 0) -
+                    Number(purchase.discountAmount)
                   ).toFixed(2)}
                 </span>
               </p>
             </>
           )}
           <p className="text-sm">
-            <span className="font-bold inline-block w-32">SGST:</span>
+            <span className="font-bold w-32">SGST:</span>
             <span className="inline-block w-32">
               ₹{((purchase.totalTax || 0) / 2).toFixed(2)}
             </span>
           </p>
           <p className="text-sm">
-            <span className="font-bold inline-block w-32">CGST:</span>
+            <span className="font-bold w-32">CGST:</span>
             <span className="inline-block w-32">
               ₹{((purchase.totalTax || 0) / 2).toFixed(2)}
             </span>
           </p>
           <p className="text-sm">
-            <span className="font-bold inline-block w-32">Total Tax:</span>
+            <span className="font-bold w-32">Total Tax:</span>
             <span className="inline-block w-32">
               ₹{purchase.totalTax?.toFixed(2) || "0.00"}
             </span>
           </p>
           {/* Freight Charge Display */}
-          {purchase.freightCharge && purchase.freightCharge > 0 && (
+          {Number(purchase.freightCharge) > 0 && (
             <p className="text-sm">
-              <span className="font-bold inline-block w-32">
-                Freight Charge:
-              </span>
+              <span className="font-bold w-32">Freight Charge:</span>
+
               <span className="inline-block w-32 text-blue-600">
-                +₹{purchase.freightCharge?.toFixed(2) || "0.00"}
+                +₹{Number(purchase.freightCharge).toFixed(2)}
               </span>
             </p>
           )}
           {/* Grand Total (Before Rounding) */}
           <p className="text-sm">
-            <span className="font-bold inline-block w-32">Grand Total:</span>
+            <span className="font-bold w-32">Grand Total:</span>
             <span className="inline-block w-32">₹{finalTotal.toFixed(2)}</span>
           </p>
           {/* Rounded Off */}
           {roundOffAmount !== 0 && (
             <p className="text-sm">
-              <span className="font-bold inline-block w-32">Rounded Off:</span>
+              <span className="font-bold w-32">Rounded Off:</span>
               <span
                 className={`inline-block w-32 ${
                   roundOffAmount > 0 ? "text-blue-600" : "text-red-600"
@@ -310,11 +309,9 @@ export function PurchaseInvoicePrint({
             </p>
           )}
           {/* Final Rounded Total */}
-          <p className="text-lg font-bold">
-            <span className="inline-block w-32">NET PAYABLE:</span>
-            <span className="inline-block w-32">
-              ₹{roundedGrandTotal.toFixed(2)}
-            </span>
+          <p className="text-lg font-bold mt-2 border-t pt-2">
+            <span className="w-32">NET PAYABLE:</span>
+            <span className="w-32">₹{roundedGrandTotal.toFixed(2)}</span>
           </p>
         </div>
 
