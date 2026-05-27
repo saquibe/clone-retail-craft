@@ -38,7 +38,7 @@ export const usePurchaseStore = () => {
   const [invoiceDate, setInvoiceDate] = useState(
     format(new Date(), "yyyy-MM-dd"),
   );
-  const [placeOfSupply, setPlaceOfSupply] = useState("");
+  const [placeOfSupply, setPlaceOfSupply] = useState("Karnataka");
   const [reverseCharge, setReverseCharge] = useState("No");
   const [purchaseId, setPurchaseId] = useState<string | undefined>();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -302,7 +302,7 @@ export const usePurchaseStore = () => {
     setItems([]);
     setInvoiceNumber("");
     setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
-    setPlaceOfSupply("");
+    setPlaceOfSupply("Karnataka");
     setReverseCharge("No");
     setDiscount(0);
     setFreightCharge(0);

@@ -892,7 +892,8 @@ export default function BillingPage() {
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">
                                   <span className="break-all">
-                                    Barcode: {product.barCode}
+                                    Item Code:{" "}
+                                    {product.itemCode || product.barCode}
                                   </span>
                                   {product.color && (
                                     <span className="ml-2">

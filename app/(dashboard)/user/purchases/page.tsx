@@ -49,6 +49,7 @@ import CreateProductDialog from "@/components/purchases/CreateProductDialog";
 import SupplierForm from "@/components/forms/SupplierForm";
 import { getProducts, Product, searchProducts } from "@/lib/api/products";
 import PurchasePageSkeleton from "@/components/skeletons/PurchasePageSkeleton";
+import StateSelector from "@/components/common/StateSelector";
 
 export default function PurchasesPage() {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -716,12 +717,11 @@ export default function PurchasesPage() {
                   <span>Place of Supply</span>
                   <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  placeholder="Enter place of supply (e.g., State name)"
+                <StateSelector
                   value={placeOfSupply}
-                  onChange={(e) => setPlaceOfSupply(e.target.value)}
+                  onChange={setPlaceOfSupply}
+                  defaultState="Karnataka"
                   disabled={!selectedSupplier}
-                  className={!selectedSupplier ? "bg-gray-50" : ""}
                 />
               </div>
               {/* Invoice Date Input */}
@@ -922,7 +922,8 @@ export default function PurchasesPage() {
                                 </div>
                                 <div className="text-sm text-gray-500 mt-1">
                                   <span className="text-xs break-all">
-                                    Barcode: {product.barCode}
+                                    Item Code:{" "}
+                                    {product.itemCode || product.barCode}
                                   </span>
                                   {product.color && (
                                     <span className="ml-2 text-xs">

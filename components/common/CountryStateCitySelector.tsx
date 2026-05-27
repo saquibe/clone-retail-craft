@@ -168,7 +168,7 @@ export default function CountryStateCitySelector({
         const stateExists = countryStates.some(
           (s) => s.value === detectedLocation.state,
         );
-        if (stateExists) {
+        if (stateExists && !selectedState) {
           setValue(stateField, detectedLocation.state, {
             shouldValidate: true,
             shouldDirty: false,
@@ -232,10 +232,12 @@ export default function CountryStateCitySelector({
           (c) => normalize(c.value) === normalize(detectedLocation.city),
         );
 
-        setValue(cityField, matchedCity?.value || stateCities[0].value, {
-          shouldValidate: true,
-          shouldDirty: false,
-        });
+        if (!watch(cityField)) {
+          setValue(cityField, matchedCity?.value || stateCities[0].value, {
+            shouldValidate: true,
+            shouldDirty: false,
+          });
+        }
       }
     } else {
       setCities([]);

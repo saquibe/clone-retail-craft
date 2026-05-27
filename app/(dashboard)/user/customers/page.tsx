@@ -61,6 +61,7 @@ export default function CustomersPage() {
   const { user } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -107,8 +108,13 @@ export default function CustomersPage() {
 
   // Handle create customer
   const handleCreateCustomer = async (data: CustomerFormData) => {
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
+
       const response = await createCustomer(data as any);
+
       if (response.success) {
         toast.success("Customer created successfully!");
         setIsCreateOpen(false);
@@ -117,15 +123,20 @@ export default function CustomersPage() {
     } catch (error: any) {
       console.error("Create customer error:", error);
       toast.error(error.response?.data?.message || "Failed to create customer");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Handle update customer
   const handleUpdateCustomer = async (data: CustomerFormData) => {
-    if (!selectedCustomer) return;
+    if (!selectedCustomer || isSubmitting) return;
 
     try {
+      setIsSubmitting(true);
+
       const response = await updateCustomer(selectedCustomer._id, data as any);
+
       if (response.success) {
         toast.success("Customer updated successfully!");
         setIsEditOpen(false);
@@ -135,6 +146,8 @@ export default function CustomersPage() {
     } catch (error: any) {
       console.error("Update customer error:", error);
       toast.error(error.response?.data?.message || "Failed to update customer");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -346,7 +359,7 @@ export default function CustomersPage() {
           </DialogHeader>
           <CustomerForm
             onSubmit={handleCreateCustomer}
-            isLoading={isLoading}
+            isLoading={isSubmitting}
             onCancel={() => setIsCreateOpen(false)}
           />
         </DialogContent>
@@ -379,7 +392,7 @@ export default function CustomersPage() {
                 }),
               }}
               onSubmit={handleUpdateCustomer}
-              isLoading={isLoading}
+              isLoading={isSubmitting}
               onCancel={() => {
                 setIsEditOpen(false);
                 setSelectedCustomer(null);

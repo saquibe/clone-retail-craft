@@ -5,7 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Building2, Mail, Phone, MapPin, Hash, CreditCard } from "lucide-react";
+import {
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
+  Hash,
+  CreditCard,
+  Loader2,
+} from "lucide-react";
 import CountryStateCitySelector from "../common/CountryStateCitySelector";
 
 // Supplier schema
@@ -221,12 +229,21 @@ export default function SupplierForm({
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isLoading} className="cursor-pointer">
-            {isLoading
-              ? "Saving..."
-              : initialData
-              ? "Update Supplier"
-              : "Create Supplier"}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="cursor-pointer min-w-[140px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </div>
+            ) : initialData ? (
+              "Update Supplier"
+            ) : (
+              "Create Supplier"
+            )}
           </Button>
         </div>
       </form>

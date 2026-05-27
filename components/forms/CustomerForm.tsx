@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
-import { Building2, User, Mail, Phone, Briefcase } from "lucide-react";
+import { Building2, User, Mail, Phone, Briefcase, Loader2 } from "lucide-react";
 import CountryStateCitySelector from "../common/CountryStateCitySelector";
 
 // Base schema for common fields
@@ -403,12 +403,21 @@ export default function CustomerForm({
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isLoading} className="cursor-pointer">
-            {isLoading
-              ? "Saving..."
-              : initialData
-              ? "Update Customer"
-              : "Create Customer"}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="cursor-pointer min-w-[140px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </div>
+            ) : initialData ? (
+              "Update Customer"
+            ) : (
+              "Create Customer"
+            )}
           </Button>
         </div>
       </form>
