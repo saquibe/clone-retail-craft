@@ -122,7 +122,6 @@ export default function BillingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Load products and customers on mount
   useEffect(() => {
     loadProducts();
     loadCustomers();
