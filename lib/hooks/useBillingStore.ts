@@ -1,5 +1,6 @@
 // lib/hooks/useBillingStore.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { format } from "date-fns";
 import { Customer } from "@/lib/api/customers";
 import { Product } from "@/lib/api/products";
 import {
@@ -9,6 +10,7 @@ import {
   updateProductQuantity,
   completeBilling,
   deleteBilling,
+  getBillingById,
 } from "@/lib/api/billing";
 import toast from "react-hot-toast";
 
@@ -23,6 +25,7 @@ interface BillingSession {
   paymentMethod: "cash" | "card" | "upi";
   paidAmount: number;
   billingId?: string;
+  invoiceDate?: string;
   lastUpdated: string;
 }
 
@@ -41,12 +44,17 @@ export const useBillingStore = () => {
   const [billingId, setBillingId] = useState<string | undefined>();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [invoiceDate, setInvoiceDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd"),
+  );
 
-  // Add loading states for individual product operations
   const [updatingProductId, setUpdatingProductId] = useState<string | null>(
     null,
   );
   const [addingProduct, setAddingProduct] = useState(false);
+
+  // Use ref to track if we're currently creating a billing
+  const isCreatingRef = useRef(false);
 
   // Load session from localStorage on mount
   useEffect(() => {
@@ -55,11 +63,12 @@ export const useBillingStore = () => {
       try {
         const session: BillingSession = JSON.parse(savedSession);
         setSelectedCustomer(session.selectedCustomer);
-        setCart(session.cart);
-        setDiscountPercentage(session.discountPercentage);
-        setPaymentMethod(session.paymentMethod);
-        setPaidAmount(session.paidAmount);
+        setCart(session.cart || []);
+        setDiscountPercentage(session.discountPercentage || 0);
+        setPaymentMethod(session.paymentMethod || "cash");
+        setPaidAmount(session.paidAmount || 0);
         setBillingId(session.billingId);
+        setInvoiceDate(session.invoiceDate || format(new Date(), "yyyy-MM-dd"));
       } catch (error) {
         console.error("Error loading billing session:", error);
       }
@@ -78,6 +87,7 @@ export const useBillingStore = () => {
       paymentMethod,
       paidAmount,
       billingId,
+      invoiceDate,
       lastUpdated: new Date().toISOString(),
     };
 
@@ -93,16 +103,24 @@ export const useBillingStore = () => {
     paymentMethod,
     paidAmount,
     billingId,
+    invoiceDate,
     isLoaded,
   ]);
 
   // Create billing draft when customer is selected
   useEffect(() => {
     const createDraftBilling = async () => {
+      // Prevent multiple concurrent creations
+      if (isCreatingRef.current) return;
+
       if (selectedCustomer && !billingId && !isLoading) {
+        isCreatingRef.current = true;
         setIsLoading(true);
         try {
-          const response = await createBilling(selectedCustomer._id);
+          const response = await createBilling(
+            selectedCustomer._id,
+            invoiceDate,
+          );
           if (response.success && response.data) {
             setBillingId(response.data._id);
             toast.success("Billing session created");
@@ -114,12 +132,50 @@ export const useBillingStore = () => {
           );
         } finally {
           setIsLoading(false);
+          isCreatingRef.current = false;
         }
       }
     };
 
     createDraftBilling();
-  }, [selectedCustomer, billingId, isLoading]);
+  }, [selectedCustomer, billingId, isLoading, invoiceDate]);
+
+  // Update invoice date on existing draft if it changes
+  useEffect(() => {
+    const updateDraftInvoiceDate = async () => {
+      // Only proceed if we have a billingId and it's not being created
+      if (!billingId || isCreatingRef.current || isLoading) return;
+      if (!selectedCustomer) return;
+
+      try {
+        // Get current billing to check if date is different
+        const response = await getBillingById(billingId);
+        if (response.success && response.data) {
+          const currentDate = response.data.invoiceDate
+            ? format(new Date(response.data.invoiceDate), "yyyy-MM-dd")
+            : null;
+
+          // If the date in the database is different from our selected date
+          if (currentDate !== invoiceDate) {
+            if (cart.length === 0) {
+              // Only recreate if cart is empty to avoid losing items
+              try {
+                await deleteBilling(billingId);
+                setBillingId(undefined);
+                // The effect above will create a new one with the updated date
+              } catch (error) {
+                console.error("Error updating invoice date:", error);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking invoice date:", error);
+      }
+    };
+
+    updateDraftInvoiceDate();
+  }, [invoiceDate, billingId, isLoading, selectedCustomer, cart.length]);
 
   // Clear session
   const clearSession = async () => {
@@ -137,6 +193,7 @@ export const useBillingStore = () => {
     setPaymentMethod("cash");
     setPaidAmount(0);
     setBillingId(undefined);
+    setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
     localStorage.removeItem(BILLING_SESSION_KEY);
   };
 
@@ -157,7 +214,7 @@ export const useBillingStore = () => {
     }
   };
 
-  // Add to cart with loading prevention
+  // Add to cart
   const addToCart = async (
     product: Product,
     selectedProductId?: string,
@@ -167,7 +224,6 @@ export const useBillingStore = () => {
       return false;
     }
 
-    // Prevent multiple rapid adds
     if (addingProduct) {
       return false;
     }
@@ -182,7 +238,6 @@ export const useBillingStore = () => {
         selectedProductId,
       );
 
-      // Handle multiple products case
       if (response.multiple && response.data && Array.isArray(response.data)) {
         throw { response, multiple: true };
       }
@@ -194,7 +249,7 @@ export const useBillingStore = () => {
           if (existing) {
             return prev.map((item) =>
               item._id === product._id
-                ? { ...item, cartQuantity: existing.cartQuantity + 1 }
+                ? { ...item, cartQuantity: (existing.cartQuantity || 0) + 1 }
                 : item,
             );
           }
@@ -218,10 +273,10 @@ export const useBillingStore = () => {
     }
   };
 
-  // Update quantity with loading prevention
+  // Update quantity
   const updateQuantity = async (productId: string, quantity: number) => {
     if (!billingId) return;
-    if (updatingProductId === productId) return; // Prevent concurrent updates
+    if (updatingProductId === productId) return;
 
     const product = cart.find((item) => item._id === productId);
     if (!product) return;
@@ -231,7 +286,6 @@ export const useBillingStore = () => {
       return;
     }
 
-    // Check stock limit before making API call
     if (quantity > product.quantity) {
       toast.error(`Only ${product.quantity} units available in stock`);
       return;
@@ -261,7 +315,7 @@ export const useBillingStore = () => {
     }
   };
 
-  // Remove from cart with loading prevention
+  // Remove from cart
   const removeFromCart = async (productId: string) => {
     if (!billingId) {
       toast.error("No active billing session");
@@ -269,9 +323,6 @@ export const useBillingStore = () => {
     }
 
     if (updatingProductId === productId) return;
-
-    const product = cart.find((item) => item._id === productId);
-    if (!product) return;
 
     setUpdatingProductId(productId);
 
@@ -328,6 +379,7 @@ export const useBillingStore = () => {
     freightCharge: number = 0,
     remarks?: string,
     invoiceType: "J1" | "J2" = "J1",
+    invoiceDateValue?: string,
   ): Promise<string | null> => {
     if (!billingId) {
       toast.error("No active billing session");
@@ -363,7 +415,9 @@ export const useBillingStore = () => {
         freightCharge,
         remarks,
         invoiceType,
+        invoiceDateValue || invoiceDate,
       );
+
       if (response.success) {
         toast.success(response.message || "Invoice generated successfully");
         setSelectedCustomer(null);
@@ -372,6 +426,7 @@ export const useBillingStore = () => {
         setPaymentMethod("cash");
         setPaidAmount(0);
         setBillingId(undefined);
+        setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
         localStorage.removeItem(BILLING_SESSION_KEY);
 
         return billingId;
@@ -399,10 +454,12 @@ export const useBillingStore = () => {
     isLoading,
     updatingProductId,
     addingProduct,
+    invoiceDate,
     setSelectedCustomer: updateCustomer,
     setDiscountPercentage,
     setPaymentMethod,
     setPaidAmount,
+    setInvoiceDate,
     addToCart,
     updateQuantity,
     removeFromCart,

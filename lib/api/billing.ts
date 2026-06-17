@@ -34,6 +34,8 @@ export interface Billing {
   paymentMode?: string;
   remarks?: string;
   paymentStatus?: "Pending" | "Paid";
+  invoiceDate?: string;
+  invoiceType?: "J1" | "J2";
 }
 
 export interface ApiResponse<T> {
@@ -49,10 +51,12 @@ export interface ApiResponse<T> {
 // =====================================================
 export const createBilling = async (
   customerId: string,
+  invoiceDate?: string,
 ): Promise<ApiResponse<Billing>> => {
   try {
     const response = await axiosInstance.post("api/billing/create", {
       customerId,
+      invoiceDate,
     });
     return response.data;
   } catch (error) {
@@ -140,6 +144,7 @@ export const completeBilling = async (
   freightCharge: number = 0,
   remarks?: string,
   invoiceType: "J1" | "J2" = "J1",
+  invoiceDate?: string,
 ): Promise<ApiResponse<Billing>> => {
   try {
     const payload: any = {
@@ -148,6 +153,10 @@ export const completeBilling = async (
       freightCharge,
       invoiceType,
     };
+
+    if (invoiceDate) {
+      payload.invoiceDate = invoiceDate;
+    }
 
     // Add remarks only for Pay Later
     if (paymentMode === "Pay Later" && remarks) {

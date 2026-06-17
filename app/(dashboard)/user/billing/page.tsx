@@ -1,4 +1,3 @@
-// app/(dashboard)/user/billing/page.tsx
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -39,6 +38,7 @@ import {
   Building2,
   Lock,
   RefreshCw,
+  Calendar, // Add this
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getProducts, Product, searchProducts } from "@/lib/api/products";
@@ -76,8 +76,10 @@ export default function BillingPage() {
     billingId,
     updatingProductId,
     addingProduct,
+    invoiceDate, // Add this
     setSelectedCustomer,
     setDiscountPercentage,
+    setInvoiceDate, // Add this
     addToCart,
     updateQuantity,
     removeFromCart,
@@ -338,7 +340,6 @@ export default function BillingPage() {
     try {
       const result = await addToCart(product);
       if (result) {
-        // toast.success(`${product.productName} added to cart`);
         setProductSearch("");
         setShowSearchResults(false);
 
@@ -492,6 +493,11 @@ export default function BillingPage() {
       return;
     }
 
+    if (!invoiceDate) {
+      toast.error("Please select invoice date");
+      return;
+    }
+
     if (
       paymentMode === "Pay Later" &&
       (!payLaterRemarks || payLaterRemarks.trim() === "")
@@ -503,12 +509,14 @@ export default function BillingPage() {
     setIsLoading(true);
 
     try {
+      // Pass invoiceDate to generateInvoice
       const billingId = await generateInvoice(
         paymentMode,
         discountPercentage,
         freightCharge,
         payLaterRemarks,
         invoiceType,
+        invoiceDate, // Pass the invoice date here
       );
 
       if (billingId) {
@@ -816,6 +824,42 @@ export default function BillingPage() {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Invoice Date Input - Add this card */}
+          <Card
+            className={`print:hidden border-2 ${
+              !invoiceDate ? "border-red-200 bg-red-50/50" : ""
+            }`}
+          >
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                Invoice Date
+                {!invoiceDate && (
+                  <Badge variant="destructive" className="ml-2 text-xs">
+                    Required
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label className="text-xs md:text-sm font-medium text-gray-700">
+                  Select Invoice Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="date"
+                  value={invoiceDate || format(new Date(), "yyyy-MM-dd")}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  disabled={!selectedCustomer}
+                  className={!selectedCustomer ? "bg-gray-50" : ""}
+                />
+                <p className="text-xs text-gray-500">
+                  Select the invoice date. Defaults to today.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -1426,6 +1470,7 @@ export default function BillingPage() {
                     cart.length === 0 ||
                     !paymentMode ||
                     !invoiceType ||
+                    !invoiceDate ||
                     isLoading ||
                     (paymentMode === "Pay Later" && !payLaterRemarks.trim())
                   }

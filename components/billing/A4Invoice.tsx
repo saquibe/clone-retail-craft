@@ -276,14 +276,25 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
             </div>
             <div>
               <strong>Invoice Date:</strong>{" "}
-              {format(new Date(billing.createdAt), "dd/MM/yyyy hh:mm a")}
+              {billing.invoiceDate
+                ? format(new Date(billing.invoiceDate), "dd/MM/yyyy")
+                : format(new Date(billing.createdAt), "dd/MM/yyyy hh:mm a")}
             </div>
+            {billing.createdAt && (
+              <div>
+                <strong>Generated On:</strong>{" "}
+                {format(new Date(billing.createdAt), "dd/MM/yyyy hh:mm a")}
+              </div>
+            )}
             <div>
               <strong>Payment Mode:</strong> {billing.paymentMode || "N/A"}
             </div>
             <div>
               <strong>Payment Status:</strong>{" "}
               {billing.paymentStatus || "Pending"}
+            </div>
+            <div>
+              <strong>Invoice Type:</strong> {billing.invoiceType || "J1"}
             </div>
           </div>
           <div className="info-box">
