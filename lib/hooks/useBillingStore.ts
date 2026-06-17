@@ -143,7 +143,6 @@ export const useBillingStore = () => {
   // Update invoice date on existing draft if it changes
   useEffect(() => {
     const updateDraftInvoiceDate = async () => {
-      // Only proceed if we have a billingId and it's not being created
       if (!billingId || isCreatingRef.current || isLoading) return;
       if (!selectedCustomer) return;
 
