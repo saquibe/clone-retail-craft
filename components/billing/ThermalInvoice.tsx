@@ -1,4 +1,5 @@
 //app/components/billing/ThermalInvoice.tsx
+//redeploy
 "use client";
 
 import { useEffect, useRef } from "react";
