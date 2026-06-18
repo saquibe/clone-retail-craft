@@ -50,6 +50,14 @@ import SupplierForm from "@/components/forms/SupplierForm";
 import { getProducts, Product, searchProducts } from "@/lib/api/products";
 import PurchasePageSkeleton from "@/components/skeletons/PurchasePageSkeleton";
 import StateSelector from "@/components/common/StateSelector";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { INDIAN_STATES } from "@/lib/utils/state";
 
 export default function PurchasesPage() {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -717,12 +725,25 @@ export default function PurchasesPage() {
                   <span>Place of Supply</span>
                   <span className="text-red-500">*</span>
                 </label>
-                <StateSelector
+                <Select
                   value={placeOfSupply}
-                  onChange={setPlaceOfSupply}
-                  defaultState="Karnataka"
+                  onValueChange={(value) => {
+                    setPlaceOfSupply(value);
+                  }}
                   disabled={!selectedSupplier}
-                />
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select State" />
+                  </SelectTrigger>
+
+                  <SelectContent className="max-h-[300px]" position="popper">
+                    {INDIAN_STATES.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {/* Invoice Date Input */}
               <div className="space-y-2">
@@ -942,7 +963,7 @@ export default function PurchasesPage() {
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <div className="text-sm font-medium text-indigo-600">
-                                  ₹{product.purchasePrice}
+                                  MRP ₹{product.b2cSalePrice.toFixed(2)}
                                 </div>
                                 <div className="flex gap-1 mt-2">
                                   <Button
