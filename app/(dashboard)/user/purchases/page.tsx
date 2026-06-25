@@ -235,6 +235,9 @@ export default function PurchasesPage() {
     reverseCharge &&
     purchaseId;
 
+  const isTelangana =
+    selectedSupplier?.state?.trim().toLowerCase() === "telangana";
+
   const handleAddSelectedProduct = async (product: any) => {
     if (!selectedSupplier) {
       toast.error("Please select a supplier first");
@@ -500,6 +503,12 @@ export default function PurchasesPage() {
     setMultipleProducts([]);
     setShowProductSelectionDialog(false);
   };
+
+  const taxableAmount = totals.afterDiscount + freightCharge;
+
+  const taxRate = totals.subTotal > 0 ? totals.totalTax / totals.subTotal : 0;
+
+  const recalculatedTax = taxableAmount * taxRate;
 
   // Show loading while restoring session
   if (!isLoaded) {
@@ -1076,8 +1085,14 @@ export default function PurchasesPage() {
                         <TableHead className="text-right">MRP</TableHead>
                         <TableHead className="text-center">Quantity</TableHead>
                         <TableHead className="text-center">Unit</TableHead>
-                        <TableHead className="text-right">SGST</TableHead>
-                        <TableHead className="text-right">CGST</TableHead>
+                        {isTelangana ? (
+                          <>
+                            <TableHead className="text-right">SGST</TableHead>
+                            <TableHead className="text-right">CGST</TableHead>
+                          </>
+                        ) : (
+                          <TableHead className="text-right">IGST</TableHead>
+                        )}
                         <TableHead className="text-right">Base Amt</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead className="text-right w-[100px]">
@@ -1170,12 +1185,21 @@ export default function PurchasesPage() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right">Pcs.</TableCell>
-                            <TableCell className="text-right">
-                              ₹{(taxAmount / 2).toFixed(2)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              ₹{(taxAmount / 2).toFixed(2)}
-                            </TableCell>
+                            {isTelangana ? (
+                              <>
+                                <TableCell className="text-right">
+                                  ₹{(taxAmount / 2).toFixed(2)}
+                                </TableCell>
+
+                                <TableCell className="text-right">
+                                  ₹{(taxAmount / 2).toFixed(2)}
+                                </TableCell>
+                              </>
+                            ) : (
+                              <TableCell className="text-right">
+                                ₹{taxAmount.toFixed(2)}
+                              </TableCell>
+                            )}
                             <TableCell className="text-right">
                               ₹{baseAmount.toFixed(2)}
                             </TableCell>
@@ -1266,34 +1290,13 @@ export default function PurchasesPage() {
                   </span>
                 </div>
 
-                {/* 4. Tax Breakdown (SGST & CGST) */}
-                <div className="space-y-1 pt-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">SGST:</span>
-                    <span className="font-medium">
-                      ₹{(totals.totalTax / 2).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">CGST:</span>
-                    <span className="font-medium">
-                      ₹{(totals.totalTax / 2).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Tax (GST):</span>
-                    <span className="font-medium">
-                      ₹{totals.totalTax.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 5. Freight Charge */}
-                <div className="flex justify-between items-center gap-4">
+                {/* Freight */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2 flex-1">
                     <span className="text-sm text-gray-600">
                       Freight Charge:
                     </span>
+
                     <Input
                       type="number"
                       min="0"
@@ -1301,6 +1304,7 @@ export default function PurchasesPage() {
                       value={freightCharge}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
+
                         if (!isNaN(val) && val >= 0) {
                           setFreightCharge(val);
                         }
@@ -1308,15 +1312,50 @@ export default function PurchasesPage() {
                       className="w-24 h-8 text-sm"
                       disabled={items.length === 0}
                     />
+
                     <span className="text-sm text-gray-500">₹</span>
                   </div>
+
                   {freightCharge > 0 && (
-                    <div className="text-right">
-                      <span className="ml-2 font-medium text-blue-600">
-                        +₹{freightCharge.toFixed(2)}
-                      </span>
-                    </div>
+                    <span className="font-medium text-blue-600 text-sm">
+                      +₹{freightCharge.toFixed(2)}
+                    </span>
                   )}
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span>Taxable Amount:</span>
+
+                  <span className="font-medium">
+                    ₹{taxableAmount.toFixed(2)}
+                  </span>
+                </div>
+                {isTelangana ? (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span>SGST</span>
+
+                      <span>₹{(recalculatedTax / 2).toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span>CGST</span>
+
+                      <span>₹{(recalculatedTax / 2).toFixed(2)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-sm">
+                    <span>IGST</span>
+
+                    <span>₹{recalculatedTax.toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-sm">
+                  <span>Total Tax</span>
+
+                  <span>₹{recalculatedTax.toFixed(2)}</span>
                 </div>
 
                 <Separator className="my-2" />
@@ -1325,33 +1364,42 @@ export default function PurchasesPage() {
                 <div className="flex justify-between font-bold text-lg">
                   <span>Grand Total:</span>
                   <span className="text-indigo-600">
-                    ₹{totals.finalTotal.toFixed(2)}
+                    ₹{(taxableAmount + recalculatedTax).toFixed(2)}
                   </span>
                 </div>
 
                 {/* 7. Rounded Off */}
-                {totals.roundOffAmount !== 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Rounded Off:</span>
-                    <span
-                      className={`font-medium ${
-                        totals.roundOffAmount > 0
-                          ? "text-blue-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {totals.roundOffAmount > 0
-                        ? `+₹${totals.roundOffAmount.toFixed(2)}`
-                        : `-₹${Math.abs(totals.roundOffAmount).toFixed(2)}`}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  const grandTotal = taxableAmount + recalculatedTax;
+                  const roundedTotal = Math.round(grandTotal);
+                  const roundOff = roundedTotal - grandTotal;
+
+                  return (
+                    <>
+                      {roundOff !== 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Rounded Off:</span>
+
+                          <span
+                            className={`font-medium ${
+                              roundOff > 0 ? "text-blue-600" : "text-red-600"
+                            }`}
+                          >
+                            {roundOff > 0
+                              ? `+₹${roundOff.toFixed(2)}`
+                              : `-₹${Math.abs(roundOff).toFixed(2)}`}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
 
                 {/* 8. Final Rounded Total */}
                 <div className="flex justify-between font-bold text-xl pt-2 border-t-2 border-gray-200">
                   <span>Rounded Total:</span>
                   <span className="text-green-600">
-                    ₹{totals.roundedFinalTotal.toFixed(2)}
+                    ₹{Math.round(taxableAmount + recalculatedTax).toFixed(2)}
                   </span>
                 </div>
               </div>

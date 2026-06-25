@@ -182,7 +182,7 @@ export const getBillingById = async (
 ): Promise<ApiResponse<Billing>> => {
   try {
     const response = await axiosInstance.get(`api/billing/${billingId}`);
-    console.log("Get billing response:", response.data);
+    // console.log("Get billing by ID response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Get billing error:", error);
@@ -214,6 +214,13 @@ export const getCompletedBillings = async (): Promise<
   try {
     const response = await axiosInstance.get("api/billing/complete/all");
     // console.log("Get completed billings response:", response.data);
+    // console.log("Completed Billings:", response.data);
+
+    response.data?.data?.forEach((bill: any) => {
+      // console.log("Customer:", bill.customerId);
+      // console.log("State:", bill.customerId?.state);
+      // console.log(response.data?.data?.customerId?.state);
+    });
     return response.data;
   } catch (error) {
     console.error("Get completed billings error:", error);

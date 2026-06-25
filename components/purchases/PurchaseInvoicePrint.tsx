@@ -30,9 +30,25 @@ export function PurchaseInvoicePrint({
 
   if (!purchase) return null;
 
-  // Calculate rounded values
-  const finalTotal = purchase.finalTotal || purchase.grandTotal;
+  const isTelangana =
+    purchase.supplierId?.state?.trim().toLowerCase() === "telangana";
+
+  const taxableAmount =
+    (purchase.subTotal || 0) -
+    (purchase.discountAmount || 0) +
+    (purchase.freightCharge || 0);
+
+  const taxRate =
+    (purchase.subTotal || 0) > 0
+      ? (purchase.totalTax || 0) / purchase.subTotal
+      : 0;
+
+  const recalculatedTax = taxableAmount * taxRate;
+
+  const finalTotal = taxableAmount + recalculatedTax;
+
   const roundedGrandTotal = Math.round(finalTotal);
+
   const roundOffAmount = roundedGrandTotal - finalTotal;
 
   // Group items by tax rate for tax table
@@ -46,12 +62,18 @@ export function PurchaseInvoicePrint({
         taxableAmt: 0,
         cgst: 0,
         sgst: 0,
+        igst: 0,
       };
     }
 
     acc[item.taxPercent].taxableAmt += baseAmount;
-    acc[item.taxPercent].cgst += taxAmount / 2;
-    acc[item.taxPercent].sgst += taxAmount / 2;
+
+    if (isTelangana) {
+      acc[item.taxPercent].cgst += taxAmount / 2;
+      acc[item.taxPercent].sgst += taxAmount / 2;
+    } else {
+      acc[item.taxPercent].igst += taxAmount;
+    }
 
     return acc;
   }, {});
@@ -209,8 +231,14 @@ export function PurchaseInvoicePrint({
                 <tr className="border-b border-black">
                   <th className="text-left py-2">Tax Rate</th>
                   <th className="text-right py-2">Taxable Amt.</th>
-                  <th className="text-right py-2">CGST</th>
-                  <th className="text-right py-2">SGST</th>
+                  {isTelangana ? (
+                    <>
+                      <th className="text-right py-2">CGST</th>
+                      <th className="text-right py-2">SGST</th>
+                    </>
+                  ) : (
+                    <th className="text-right py-2">IGST</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -220,8 +248,21 @@ export function PurchaseInvoicePrint({
                     <td className="text-right py-2">
                       ₹{item.taxableAmt.toFixed(2)}
                     </td>
-                    <td className="text-right py-2">₹{item.cgst.toFixed(2)}</td>
-                    <td className="text-right py-2">₹{item.sgst.toFixed(2)}</td>
+                    {isTelangana ? (
+                      <>
+                        <td className="text-right py-2">
+                          ₹{item.cgst.toFixed(2)}
+                        </td>
+
+                        <td className="text-right py-2">
+                          ₹{item.sgst.toFixed(2)}
+                        </td>
+                      </>
+                    ) : (
+                      <td className="text-right py-2">
+                        ₹{item.igst.toFixed(2)}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -260,25 +301,7 @@ export function PurchaseInvoicePrint({
               </p>
             </>
           )}
-          <p className="text-sm">
-            <span className="font-bold w-32">SGST:</span>
-            <span className="inline-block w-32">
-              ₹{((purchase.totalTax || 0) / 2).toFixed(2)}
-            </span>
-          </p>
-          <p className="text-sm">
-            <span className="font-bold w-32">CGST:</span>
-            <span className="inline-block w-32">
-              ₹{((purchase.totalTax || 0) / 2).toFixed(2)}
-            </span>
-          </p>
-          <p className="text-sm">
-            <span className="font-bold w-32">Total Tax:</span>
-            <span className="inline-block w-32">
-              ₹{purchase.totalTax?.toFixed(2) || "0.00"}
-            </span>
-          </p>
-          {/* Freight Charge Display */}
+          {/* Freight Charge */}
           {Number(purchase.freightCharge) > 0 && (
             <p className="text-sm">
               <span className="font-bold w-32">Freight Charge:</span>
@@ -288,6 +311,50 @@ export function PurchaseInvoicePrint({
               </span>
             </p>
           )}
+
+          <p className="text-sm">
+            <span className="font-bold w-32">Taxable Amount:</span>
+
+            <span className="inline-block w-32">
+              ₹{taxableAmount.toFixed(2)}
+            </span>
+          </p>
+
+          {isTelangana ? (
+            <>
+              <p className="text-sm">
+                <span className="font-bold w-32">SGST:</span>
+
+                <span className="inline-block w-32">
+                  ₹{(recalculatedTax / 2).toFixed(2)}
+                </span>
+              </p>
+
+              <p className="text-sm">
+                <span className="font-bold w-32">CGST:</span>
+
+                <span className="inline-block w-32">
+                  ₹{(recalculatedTax / 2).toFixed(2)}
+                </span>
+              </p>
+            </>
+          ) : (
+            <p className="text-sm">
+              <span className="font-bold w-32">IGST:</span>
+
+              <span className="inline-block w-32">
+                ₹{recalculatedTax.toFixed(2)}
+              </span>
+            </p>
+          )}
+
+          <p className="text-sm">
+            <span className="font-bold w-32">Total Tax:</span>
+
+            <span className="inline-block w-32">
+              ₹{recalculatedTax.toFixed(2)}
+            </span>
+          </p>
           {/* Grand Total (Before Rounding) */}
           <p className="text-sm">
             <span className="font-bold w-32">Grand Total:</span>

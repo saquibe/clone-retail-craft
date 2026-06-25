@@ -521,363 +521,419 @@ export default function CustomerInvoicesPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {currentItems.map((billing) => (
-                        <React.Fragment key={billing._id}>
-                          <TableRow className="cursor-pointer hover:bg-gray-50">
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => toggleExpand(billing._id)}
-                              >
-                                {expandedBilling === billing._id ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {billing.invoiceNumber}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-gray-400" />
-                                {format(
-                                  new Date(billing.createdAt),
-                                  "dd/MM/yyyy",
-                                )}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {format(new Date(billing.createdAt), "hh:mm a")}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <User className="w-3 h-3 text-gray-400" />
-                                {billing.customerId?.name || "N/A"}
-                              </div>
-                              {billing.customerId?.customerType && (
-                                <Badge
-                                  className={
-                                    billing.customerId.customerType === "B2B"
-                                      ? "bg-purple-100 text-purple-800 text-xs mt-1"
-                                      : "bg-green-100 text-green-800 text-xs mt-1"
-                                  }
-                                >
-                                  {billing.customerId.customerType}
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Package className="w-3 h-3 text-gray-400" />
-                                {billing.items?.length || 0} items
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Total Qty:{" "}
-                                {billing.items?.reduce(
-                                  (sum, item) => sum + item.quantity,
-                                  0,
-                                ) || 0}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {(() => {
-                                const finalTotal =
-                                  billing.finalTotal || billing.grandTotal || 0;
-                                const roundedTotal = Math.round(finalTotal);
-                                return formatCurrency(roundedTotal);
-                              })()}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={getPaymentModeBadge(
-                                  billing.paymentMode || "",
-                                )}
-                              >
-                                {billing.paymentMode === "Pay Later" ? (
-                                  <MessageSquare className="w-3 h-3 mr-1" />
-                                ) : (
-                                  <CreditCard className="w-3 h-3 mr-1" />
-                                )}
-                                {billing.paymentMode || "N/A"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  className={getPaymentStatusBadge(
-                                    billing.paymentStatus || "Pending",
-                                  )}
-                                >
-                                  {billing.paymentStatus || "Pending"}
-                                </Badge>
-                                {billing.paymentMode === "Pay Later" &&
-                                  billing.paymentStatus !== "Paid" && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        openConfirmDialog(
-                                          billing._id,
-                                          billing.paymentStatus || "Pending",
-                                        )
-                                      }
-                                      disabled={updatingPayment === billing._id}
-                                      className="h-6 text-xs"
-                                    >
-                                      {updatingPayment === billing._id ? (
-                                        <Loader2 className="w-3 h-3 animate-spin" />
-                                      ) : (
-                                        "Mark Paid"
-                                      )}
-                                    </Button>
-                                  )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewInvoice(billing)}
-                              >
-                                <Eye className="w-4 h-4 mr-1" /> View
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          {expandedBilling === billing._id && (
-                            <TableRow>
-                              <TableCell
-                                colSpan={12}
-                                className="bg-gray-50 p-4"
-                              >
-                                <div className="space-y-3">
-                                  <h4 className="font-medium flex items-center gap-2">
-                                    <ShoppingBag className="w-4 h-4" /> Items
-                                    Details
-                                  </h4>
-                                  <div className="grid gap-2">
-                                    {billing.items?.map((item, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex justify-between items-center text-sm p-2 bg-white rounded border"
-                                      >
-                                        <div className="flex-1">
-                                          <p className="font-medium">
-                                            {item.productName}
-                                          </p>
-                                          <p className="text-xs text-gray-500">
-                                            Item Code: {item.itemCode}
-                                          </p>
-                                        </div>
-                                        <div className="flex gap-4">
-                                          <div className="text-right">
-                                            <span className="text-gray-500 text-xs">
-                                              Qty:
-                                            </span>
-                                            <span className="ml-1 font-medium">
-                                              {item.quantity}
-                                            </span>
-                                          </div>
-                                          <div className="text-right min-w-[80px]">
-                                            <span className="text-gray-500 text-xs">
-                                              Price:
-                                            </span>
-                                            <span className="ml-1 font-medium">
-                                              ₹{item.price.toFixed(2)}
-                                            </span>
-                                          </div>
-                                          <div className="text-right min-w-[80px]">
-                                            <span className="text-gray-500 text-xs">
-                                              Total:
-                                            </span>
-                                            <span className="ml-1 font-medium text-indigo-600">
-                                              ₹
-                                              {(
-                                                item.price * item.quantity
-                                              ).toFixed(2)}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  {/* Summary Section */}
-                                  <div className="mt-4 pt-3 border-t">
-                                    <div className="space-y-2">
-                                      {/* Base Amount */}
-                                      <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">
-                                          Base Amount:
-                                        </span>
-                                        <span className="font-medium">
-                                          ₹
-                                          {billing.subTotal?.toFixed(2) ||
-                                            "0.00"}
-                                        </span>
-                                      </div>
+                      {currentItems.map((billing) => {
+                        const isTelangana =
+                          billing.customerId?.state?.trim().toLowerCase() ===
+                          "telangana";
 
-                                      {/* Discount */}
-                                      {(billing.discountAmount ?? 0) > 0 && (
-                                        <>
+                        return (
+                          <React.Fragment key={billing._id}>
+                            <TableRow className="cursor-pointer hover:bg-gray-50">
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => toggleExpand(billing._id)}
+                                >
+                                  {expandedBilling === billing._id ? (
+                                    <ChevronUp className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {billing.invoiceNumber}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3 text-gray-400" />
+                                  {format(
+                                    new Date(billing.createdAt),
+                                    "dd/MM/yyyy",
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {format(
+                                    new Date(billing.createdAt),
+                                    "hh:mm a",
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <User className="w-3 h-3 text-gray-400" />
+                                  {billing.customerId?.name || "N/A"}
+                                </div>
+                                {billing.customerId?.customerType && (
+                                  <Badge
+                                    className={
+                                      billing.customerId.customerType === "B2B"
+                                        ? "bg-purple-100 text-purple-800 text-xs mt-1"
+                                        : "bg-green-100 text-green-800 text-xs mt-1"
+                                    }
+                                  >
+                                    {billing.customerId.customerType}
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Package className="w-3 h-3 text-gray-400" />
+                                  {billing.items?.length || 0} items
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Total Qty:{" "}
+                                  {billing.items?.reduce(
+                                    (sum, item) => sum + item.quantity,
+                                    0,
+                                  ) || 0}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {(() => {
+                                  const finalTotal =
+                                    billing.finalTotal ||
+                                    billing.grandTotal ||
+                                    0;
+                                  const roundedTotal = Math.round(finalTotal);
+                                  return formatCurrency(roundedTotal);
+                                })()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={getPaymentModeBadge(
+                                    billing.paymentMode || "",
+                                  )}
+                                >
+                                  {billing.paymentMode === "Pay Later" ? (
+                                    <MessageSquare className="w-3 h-3 mr-1" />
+                                  ) : (
+                                    <CreditCard className="w-3 h-3 mr-1" />
+                                  )}
+                                  {billing.paymentMode || "N/A"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    className={getPaymentStatusBadge(
+                                      billing.paymentStatus || "Pending",
+                                    )}
+                                  >
+                                    {billing.paymentStatus || "Pending"}
+                                  </Badge>
+                                  {billing.paymentMode === "Pay Later" &&
+                                    billing.paymentStatus !== "Paid" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          openConfirmDialog(
+                                            billing._id,
+                                            billing.paymentStatus || "Pending",
+                                          )
+                                        }
+                                        disabled={
+                                          updatingPayment === billing._id
+                                        }
+                                        className="h-6 text-xs"
+                                      >
+                                        {updatingPayment === billing._id ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          "Mark Paid"
+                                        )}
+                                      </Button>
+                                    )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewInvoice(billing)}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" /> View
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                            {expandedBilling === billing._id && (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={12}
+                                  className="bg-gray-50 p-4"
+                                >
+                                  <div className="space-y-3">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                      <ShoppingBag className="w-4 h-4" /> Items
+                                      Details
+                                    </h4>
+                                    <div className="grid gap-2">
+                                      {billing.items?.map((item, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="flex justify-between items-center text-sm p-2 bg-white rounded border"
+                                        >
+                                          <div className="flex-1">
+                                            <p className="font-medium">
+                                              {item.productName}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                              Item Code: {item.itemCode}
+                                            </p>
+                                          </div>
+                                          <div className="flex gap-4">
+                                            <div className="text-right">
+                                              <span className="text-gray-500 text-xs">
+                                                Qty:
+                                              </span>
+                                              <span className="ml-1 font-medium">
+                                                {item.quantity}
+                                              </span>
+                                            </div>
+                                            <div className="text-right min-w-[80px]">
+                                              <span className="text-gray-500 text-xs">
+                                                Price:
+                                              </span>
+                                              <span className="ml-1 font-medium">
+                                                ₹{item.price.toFixed(2)}
+                                              </span>
+                                            </div>
+                                            <div className="text-right min-w-[80px]">
+                                              <span className="text-gray-500 text-xs">
+                                                Total:
+                                              </span>
+                                              <span className="ml-1 font-medium text-indigo-600">
+                                                ₹
+                                                {(
+                                                  item.price * item.quantity
+                                                ).toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {/* Summary Section */}
+                                    <div className="mt-4 pt-3 border-t">
+                                      <div className="space-y-2">
+                                        {/* Base Amount */}
+                                        <div className="flex justify-between text-sm">
+                                          <span className="text-gray-600">
+                                            Base Amount:
+                                          </span>
+                                          <span className="font-medium">
+                                            ₹
+                                            {billing.subTotal?.toFixed(2) ||
+                                              "0.00"}
+                                          </span>
+                                        </div>
+
+                                        {/* Discount */}
+                                        {(billing.discountAmount ?? 0) > 0 && (
+                                          <>
+                                            <div className="flex justify-between text-sm">
+                                              <span className="text-gray-600">
+                                                Discount:
+                                              </span>
+                                              <span className="font-medium text-red-700">
+                                                -₹
+                                                {billing.discountAmount!.toFixed(
+                                                  2,
+                                                )}
+                                              </span>
+                                            </div>
+
+                                            <div className="flex justify-between text-sm">
+                                              <span className="text-gray-600 italic">
+                                                Amount after Discount:
+                                              </span>
+                                              <span className="font-medium">
+                                                ₹
+                                                {(
+                                                  (billing.subTotal || 0) -
+                                                  billing.discountAmount!
+                                                ).toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </>
+                                        )}
+
+                                        {(() => {
+                                          const amountAfterDiscount =
+                                            (billing.subTotal || 0) -
+                                            (billing.discountAmount || 0);
+
+                                          const taxableAmount =
+                                            amountAfterDiscount +
+                                            (billing.freightCharge || 0);
+
+                                          return (
+                                            <>
+                                              {(billing.freightCharge ?? 0) >
+                                                0 && (
+                                                <div className="flex justify-between text-sm">
+                                                  <span className="text-gray-600">
+                                                    Freight Charge:
+                                                  </span>
+
+                                                  <span className="font-medium text-blue-600">
+                                                    +₹
+                                                    {billing.freightCharge!.toFixed(
+                                                      2,
+                                                    )}
+                                                  </span>
+                                                </div>
+                                              )}
+
+                                              <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">
+                                                  Taxable Amount:
+                                                </span>
+
+                                                <span className="font-medium">
+                                                  ₹{taxableAmount.toFixed(2)}
+                                                </span>
+                                              </div>
+                                            </>
+                                          );
+                                        })()}
+
+                                        {isTelangana ? (
+                                          <>
+                                            <div className="flex justify-between text-sm">
+                                              <span className="text-gray-600">
+                                                SGST:
+                                              </span>
+
+                                              <span className="font-medium">
+                                                ₹
+                                                {(
+                                                  (billing.totalTax || 0) / 2
+                                                ).toFixed(2)}
+                                              </span>
+                                            </div>
+
+                                            <div className="flex justify-between text-sm">
+                                              <span className="text-gray-600">
+                                                CGST:
+                                              </span>
+
+                                              <span className="font-medium">
+                                                ₹
+                                                {(
+                                                  (billing.totalTax || 0) / 2
+                                                ).toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </>
+                                        ) : (
                                           <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">
-                                              Discount:
+                                              IGST:
                                             </span>
-                                            <span className="font-medium text-red-700">
-                                              -₹
-                                              {billing.discountAmount!.toFixed(
+
+                                            <span className="font-medium">
+                                              ₹
+                                              {(billing.totalTax || 0).toFixed(
                                                 2,
                                               )}
                                             </span>
                                           </div>
+                                        )}
 
-                                          <div className="flex justify-between text-sm">
-                                            <span className="text-gray-600 italic">
-                                              Amount after Discount:
-                                            </span>
-                                            <span className="font-medium">
-                                              ₹
-                                              {(
-                                                (billing.subTotal || 0) -
-                                                billing.discountAmount!
-                                              ).toFixed(2)}
-                                            </span>
-                                          </div>
-                                        </>
-                                      )}
-
-                                      {/* SGST */}
-                                      <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">
-                                          SGST:
-                                        </span>
-                                        <span className="font-medium">
-                                          ₹
-                                          {(
-                                            (billing.totalTax || 0) / 2
-                                          ).toFixed(2)}
-                                        </span>
-                                      </div>
-
-                                      {/* CGST */}
-                                      <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">
-                                          CGST:
-                                        </span>
-                                        <span className="font-medium">
-                                          ₹
-                                          {(
-                                            (billing.totalTax || 0) / 2
-                                          ).toFixed(2)}
-                                        </span>
-                                      </div>
-
-                                      {/* Total Tax */}
-                                      <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">
-                                          Total Tax:
-                                        </span>
-                                        <span className="font-medium">
-                                          ₹
-                                          {billing.totalTax?.toFixed(2) ||
-                                            "0.00"}
-                                        </span>
-                                      </div>
-
-                                      {/* Freight Charge */}
-                                      {(billing.freightCharge ?? 0) > 0 && (
                                         <div className="flex justify-between text-sm">
                                           <span className="text-gray-600">
-                                            Freight Charge:
+                                            Total Tax:
                                           </span>
-                                          <span className="font-medium text-blue-500">
-                                            +₹
-                                            {billing.freightCharge!.toFixed(2)}
+
+                                          <span className="font-medium">
+                                            ₹
+                                            {(billing.totalTax || 0).toFixed(2)}
                                           </span>
                                         </div>
-                                      )}
 
-                                      {/* Total Amount Before Round Off */}
-                                      {(() => {
-                                        const totalAmount =
-                                          billing.finalTotal ||
-                                          billing.grandTotal ||
-                                          0;
+                                        {/* Total Amount Before Round Off */}
+                                        {(() => {
+                                          const totalAmount =
+                                            billing.finalTotal ||
+                                            billing.grandTotal ||
+                                            0;
 
-                                        const roundedAmount =
-                                          Math.round(totalAmount);
+                                          const roundedAmount =
+                                            Math.round(totalAmount);
 
-                                        const roundOffAmount =
-                                          roundedAmount - totalAmount;
+                                          const roundOffAmount =
+                                            roundedAmount - totalAmount;
 
-                                        return (
-                                          <>
-                                            <div className="flex justify-between text-sm">
-                                              <span className="text-gray-600">
-                                                Total Amount:
-                                              </span>
-                                              <span className="font-medium">
-                                                ₹{totalAmount.toFixed(2)}
-                                              </span>
-                                            </div>
-
-                                            {roundOffAmount !== 0 && (
+                                          return (
+                                            <>
                                               <div className="flex justify-between text-sm">
                                                 <span className="text-gray-600">
-                                                  Round Off:
+                                                  Total Amount:
                                                 </span>
-                                                <span className="font-medium text-gray-700">
-                                                  {roundOffAmount > 0
-                                                    ? "+"
-                                                    : "-"}
-                                                  ₹
-                                                  {Math.abs(
-                                                    roundOffAmount,
-                                                  ).toFixed(2)}
+                                                <span className="font-medium">
+                                                  ₹{totalAmount.toFixed(2)}
                                                 </span>
                                               </div>
-                                            )}
 
-                                            <div className="flex justify-between text-base font-bold pt-2 mt-2 border-t border-dashed">
-                                              <span className="text-gray-800">
-                                                Final Amount:
-                                              </span>
-                                              <span className="text-green-700">
-                                                ₹{roundedAmount.toFixed(2)}
-                                              </span>
-                                            </div>
-                                          </>
-                                        );
-                                      })()}
+                                              {roundOffAmount !== 0 && (
+                                                <div className="flex justify-between text-sm">
+                                                  <span className="text-gray-600">
+                                                    Round Off:
+                                                  </span>
+                                                  <span className="font-medium text-gray-700">
+                                                    {roundOffAmount > 0
+                                                      ? "+"
+                                                      : "-"}
+                                                    ₹
+                                                    {Math.abs(
+                                                      roundOffAmount,
+                                                    ).toFixed(2)}
+                                                  </span>
+                                                </div>
+                                              )}
 
-                                      {/* Pay Later Remarks */}
-                                      {billing.paymentMode === "Pay Later" &&
-                                        billing.remarks && (
-                                          <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                            <div className="flex items-start gap-2">
-                                              <MessageSquare className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                              <div>
-                                                <p className="text-xs font-medium text-gray-700">
-                                                  Payment Remarks:
-                                                </p>
-                                                <p className="text-sm text-gray-600">
-                                                  {billing.remarks}
-                                                </p>
+                                              <div className="flex justify-between text-base font-bold pt-2 mt-2 border-t border-dashed">
+                                                <span className="text-gray-800">
+                                                  Final Amount:
+                                                </span>
+                                                <span className="text-green-700">
+                                                  ₹{roundedAmount.toFixed(2)}
+                                                </span>
+                                              </div>
+                                            </>
+                                          );
+                                        })()}
+
+                                        {/* Pay Later Remarks */}
+                                        {billing.paymentMode === "Pay Later" &&
+                                          billing.remarks && (
+                                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                              <div className="flex items-start gap-2">
+                                                <MessageSquare className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                  <p className="text-xs font-medium text-gray-700">
+                                                    Payment Remarks:
+                                                  </p>
+                                                  <p className="text-sm text-gray-600">
+                                                    {billing.remarks}
+                                                  </p>
+                                                </div>
                                               </div>
                                             </div>
-                                          </div>
-                                        )}
+                                          )}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </React.Fragment>
-                      ))}
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

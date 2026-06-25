@@ -190,6 +190,7 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
   const freightCharge = billing.freightCharge ?? 0;
   const totalTax = billing.totalTax ?? 0;
   const amountAfterDiscount = subTotal - discountAmount;
+  const taxableAmount = amountAfterDiscount + freightCharge;
 
   // Helper function to safely get branch details
   const getBranchName = () => {
@@ -223,11 +224,12 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
     return "N/A";
   };
 
-  // Group items by tax rate
+  const isTelangana =
+    billing.customerId?.state?.trim().toLowerCase() === "telangana";
+
   const itemsByTax = billing.items.reduce((acc: any, item) => {
-    const totalAmount = item.price * item.quantity;
-    const taxableAmt = totalAmount / (1 + item.taxPercent / 100);
-    const taxAmount = totalAmount - taxableAmt;
+    const taxableAmt = item.price * item.quantity;
+    const taxAmount = (taxableAmt * item.taxPercent) / 100;
 
     if (!acc[item.taxPercent]) {
       acc[item.taxPercent] = {
@@ -235,12 +237,18 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
         taxableAmt: 0,
         cgst: 0,
         sgst: 0,
+        igst: 0,
       };
     }
 
     acc[item.taxPercent].taxableAmt += taxableAmt;
-    acc[item.taxPercent].cgst += taxAmount / 2;
-    acc[item.taxPercent].sgst += taxAmount / 2;
+
+    if (isTelangana) {
+      acc[item.taxPercent].cgst += taxAmount / 2;
+      acc[item.taxPercent].sgst += taxAmount / 2;
+    } else {
+      acc[item.taxPercent].igst += taxAmount;
+    }
 
     return acc;
   }, {});
@@ -364,8 +372,15 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
               <tr>
                 <th>Tax Rate</th>
                 <th className="text-right">Taxable Amt.</th>
-                <th className="text-right">CGST</th>
-                <th className="text-right">SGST</th>
+
+                {isTelangana ? (
+                  <>
+                    <th className="text-right">CGST</th>
+                    <th className="text-right">SGST</th>
+                  </>
+                ) : (
+                  <th className="text-right">IGST</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -375,8 +390,20 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
                   <td className="text-right">
                     {formatCurrency(item.taxableAmt)}
                   </td>
-                  <td className="text-right">{formatCurrency(item.cgst)}</td>
-                  <td className="text-right">{formatCurrency(item.sgst)}</td>
+
+                  {isTelangana ? (
+                    <>
+                      <td className="text-right">
+                        {formatCurrency(item.cgst)}
+                      </td>
+
+                      <td className="text-right">
+                        {formatCurrency(item.sgst)}
+                      </td>
+                    </>
+                  ) : (
+                    <td className="text-right">{formatCurrency(item.igst)}</td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -405,19 +432,41 @@ export function A4Invoice({ billing, onPrinted }: A4InvoiceProps) {
             </>
           )}
 
+          {freightCharge > 0 && (
+            <div className="total-row">
+              <span>Freight Charge:</span>
+              <span>+{formatCurrency(freightCharge)}</span>
+            </div>
+          )}
+
+          <div className="total-row">
+            <span>Taxable Amount:</span>
+            <span>{formatCurrency(taxableAmount)}</span>
+          </div>
+
+          {isTelangana ? (
+            <>
+              <div className="total-row">
+                <span>CGST:</span>
+                <span>{formatCurrency(totalTax / 2)}</span>
+              </div>
+
+              <div className="total-row">
+                <span>SGST:</span>
+                <span>{formatCurrency(totalTax / 2)}</span>
+              </div>
+            </>
+          ) : (
+            <div className="total-row">
+              <span>IGST:</span>
+              <span>{formatCurrency(totalTax)}</span>
+            </div>
+          )}
+
           <div className="total-row">
             <span>Total Tax:</span>
             <span>{formatCurrency(totalTax)}</span>
           </div>
-
-          {freightCharge > 0 && (
-            <div className="total-row">
-              <span>Freight Charge:</span>
-              <span className="text-blue-600">
-                +{formatCurrency(freightCharge)}
-              </span>
-            </div>
-          )}
 
           <div className="total-row">
             <span>Grand Total:</span>

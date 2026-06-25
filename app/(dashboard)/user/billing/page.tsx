@@ -426,27 +426,29 @@ export default function BillingPage() {
   // Calculate totals
   const subtotal = useMemo(() => {
     if (!selectedCustomer) return 0;
+
     return cart.reduce((sum, item) => {
       const price =
         selectedCustomer.customerType === "B2B"
           ? item.b2bSalePrice || 0
           : item.b2cSalePrice || 0;
+
       return sum + price * (item.cartQuantity || 0);
     }, 0);
   }, [cart, selectedCustomer]);
 
   const taxTotal = useMemo(() => {
     if (!selectedCustomer) return 0;
+
     return cart.reduce((sum, item) => {
       const price =
         selectedCustomer.customerType === "B2B"
           ? item.b2bSalePrice || 0
           : item.b2cSalePrice || 0;
-      const tax = item.salesTax || 0;
-      const priceWithQty = price * (item.cartQuantity || 0);
-      const baseAmount = priceWithQty / (1 + tax / 100);
-      const taxAmount = priceWithQty - baseAmount;
-      return sum + taxAmount;
+
+      const baseAmount = price * (item.cartQuantity || 0);
+
+      return sum + (baseAmount * (item.salesTax || 0)) / 100;
     }, 0);
   }, [cart, selectedCustomer]);
 
@@ -464,11 +466,20 @@ export default function BillingPage() {
     }, 0);
   }, [cart, selectedCustomer]);
 
-  const discountAmountCalculated = (baseTotal * discountPercentage) / 100;
-  const grandTotal =
-    baseTotal - discountAmountCalculated + taxTotal + freightCharge;
+  const averageTaxRate = subtotal > 0 ? taxTotal / subtotal : 0;
+
+  const discountAmountCalculated = (subtotal * discountPercentage) / 100;
+
+  const taxableAmount = subtotal - discountAmountCalculated + freightCharge;
+
+  const recalculatedTax = taxableAmount * averageTaxRate;
+
+  const grandTotal = taxableAmount + recalculatedTax;
+
   const roundedGrandTotal = Math.round(grandTotal);
+
   const roundOffAmount = roundedGrandTotal - grandTotal;
+
   const balance = paidAmount - roundedGrandTotal;
 
   // Handle generate invoice
@@ -537,6 +548,9 @@ export default function BillingPage() {
       setIsLoading(false);
     }
   };
+
+  const isTelangana =
+    selectedCustomer?.state?.trim().toLowerCase() === "telangana";
 
   // Show loading while restoring session
   if (!isLoaded) {
@@ -954,11 +968,14 @@ export default function BillingPage() {
                                 </div>
                               </div>
                               <div className="text-left sm:text-right">
-                                <div className="text-sm font-medium text-indigo-600">
+                                {/* <div className="text-sm font-medium text-indigo-600">
                                   ₹
                                   {selectedCustomer?.customerType === "B2B"
                                     ? (product.b2bSalePrice || 0).toFixed(2)
                                     : (product.b2cSalePrice || 0).toFixed(2)}
+                                </div> */}
+                                <div className="text-sm font-medium text-indigo-600">
+                                  MRP ₹{product.b2cSalePrice.toFixed(2)}
                                 </div>
                               </div>
                             </div>
@@ -1056,12 +1073,21 @@ export default function BillingPage() {
                           <TableHead className="text-right text-xs md:text-sm hidden sm:table-cell">
                             Unit
                           </TableHead>
-                          <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">
-                            SGST
-                          </TableHead>
-                          <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">
-                            CGST
-                          </TableHead>
+                          {isTelangana ? (
+                            <>
+                              <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">
+                                CGST
+                              </TableHead>
+
+                              <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">
+                                SGST
+                              </TableHead>
+                            </>
+                          ) : (
+                            <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">
+                              IGST
+                            </TableHead>
+                          )}
                           <TableHead className="text-right text-xs md:text-sm hidden lg:table-cell">
                             Base Amt
                           </TableHead>
@@ -1079,11 +1105,14 @@ export default function BillingPage() {
                             selectedCustomer?.customerType === "B2B"
                               ? item.b2bSalePrice || 0
                               : item.b2cSalePrice || 0;
+
                           const tax = item.salesTax || 0;
-                          const priceWithQty = price * (item.cartQuantity || 0);
-                          const taxAmount = (priceWithQty * tax) / (100 + tax);
-                          const baseAmount = priceWithQty - taxAmount;
-                          const itemTotal = priceWithQty;
+
+                          const baseAmount = price * (item.cartQuantity || 0);
+
+                          const taxAmount = (baseAmount * tax) / 100;
+
+                          const itemTotal = baseAmount + taxAmount;
 
                           return (
                             <TableRow key={item._id}>
@@ -1158,12 +1187,21 @@ export default function BillingPage() {
                               <TableCell className="text-right text-xs hidden sm:table-cell">
                                 Pcs.
                               </TableCell>
-                              <TableCell className="text-right text-xs hidden md:table-cell">
-                                ₹{(taxAmount / 2).toFixed(2)}
-                              </TableCell>
-                              <TableCell className="text-right text-xs hidden md:table-cell">
-                                ₹{(taxAmount / 2).toFixed(2)}
-                              </TableCell>
+                              {isTelangana ? (
+                                <>
+                                  <TableCell className="text-right text-xs hidden md:table-cell">
+                                    ₹{(taxAmount / 2).toFixed(2)}
+                                  </TableCell>
+
+                                  <TableCell className="text-right text-xs hidden md:table-cell">
+                                    ₹{(taxAmount / 2).toFixed(2)}
+                                  </TableCell>
+                                </>
+                              ) : (
+                                <TableCell className="text-right text-xs hidden md:table-cell">
+                                  ₹{taxAmount.toFixed(2)}
+                                </TableCell>
+                              )}
                               <TableCell className="text-right text-xs hidden lg:table-cell">
                                 ₹{baseAmount.toFixed(2)}
                               </TableCell>
@@ -1220,17 +1258,19 @@ export default function BillingPage() {
               )}
 
               <div className="space-y-2">
+                {/* Base Amount */}
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Base Amount:</span>
-                  <span className="font-medium">₹{baseTotal.toFixed(2)}</span>
+                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
 
-                {/* Discount on Base Amount - Percentage */}
+                {/* Discount */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs md:text-sm text-gray-600">
                       Discount (%):
                     </span>
+
                     <Input
                       type="number"
                       min="0"
@@ -1239,6 +1279,7 @@ export default function BillingPage() {
                       value={discountPercentage}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
+
                         if (!isNaN(val) && val >= 0 && val <= 100) {
                           setDiscountPercentage(val);
                         } else if (val > 100) {
@@ -1248,51 +1289,33 @@ export default function BillingPage() {
                       className="w-20 h-8 text-sm"
                       disabled={cart.length === 0}
                     />
+
                     <span className="text-xs text-gray-500">%</span>
                   </div>
+
                   {discountPercentage > 0 && (
-                    <div className="text-right">
-                      <span className="ml-2 font-medium text-red-600 text-xs md:text-sm">
-                        -₹{discountAmountCalculated.toFixed(2)}
-                      </span>
-                    </div>
+                    <span className="font-medium text-red-600 text-xs md:text-sm">
+                      -₹{discountAmountCalculated.toFixed(2)}
+                    </span>
                   )}
                 </div>
 
                 {/* Amount after Discount */}
                 <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Amount after Discount:</span>
+
                   <span className="font-medium">
-                    ₹{(baseTotal - discountAmountCalculated).toFixed(2)}
+                    ₹{(subtotal - discountAmountCalculated).toFixed(2)}
                   </span>
                 </div>
 
-                {/* Tax Breakdown */}
-                <div className="space-y-1 pt-2">
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">SGST:</span>
-                    <span className="font-medium">
-                      ₹{(taxTotal / 2).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">CGST:</span>
-                    <span className="font-medium">
-                      ₹{(taxTotal / 2).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs md:text-sm">
-                    <span className="text-gray-600">Total Tax:</span>
-                    <span className="font-medium">₹{taxTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {/* Freight Charge */}
+                {/* Freight */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs md:text-sm text-gray-600">
                       Freight Charge:
                     </span>
+
                     <Input
                       type="number"
                       min="0"
@@ -1300,6 +1323,7 @@ export default function BillingPage() {
                       value={freightCharge}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
+
                         if (!isNaN(val) && val >= 0) {
                           setFreightCharge(val);
                         }
@@ -1307,15 +1331,63 @@ export default function BillingPage() {
                       className="w-24 h-8 text-sm"
                       disabled={cart.length === 0}
                     />
+
                     <span className="text-xs text-gray-500">₹</span>
                   </div>
+
                   {freightCharge > 0 && (
-                    <div className="text-right">
-                      <span className="ml-2 font-medium text-blue-600 text-xs md:text-sm">
-                        +₹{freightCharge.toFixed(2)}
+                    <span className="font-medium text-blue-600 text-xs md:text-sm">
+                      +₹{freightCharge.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Taxable Amount */}
+                <div className="flex justify-between text-xs md:text-sm">
+                  <span className="text-gray-600">Taxable Amount:</span>
+
+                  <span className="font-medium">
+                    ₹{taxableAmount.toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Tax */}
+                <div className="space-y-1 pt-2">
+                  {isTelangana ? (
+                    <>
+                      <div className="flex justify-between text-xs md:text-sm">
+                        <span className="text-gray-600">CGST</span>
+
+                        <span className="font-medium">
+                          ₹{(recalculatedTax / 2).toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between text-xs md:text-sm">
+                        <span className="text-gray-600">SGST</span>
+
+                        <span className="font-medium">
+                          ₹{(recalculatedTax / 2).toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-xs md:text-sm">
+                      <span className="text-gray-600">IGST</span>
+
+                      <span className="font-medium">
+                        ₹{recalculatedTax.toFixed(2)}
                       </span>
                     </div>
                   )}
+
+                  <div className="flex justify-between text-xs md:text-sm">
+                    <span className="text-gray-600">Total Tax</span>
+
+                    <span className="font-medium">
+                      ₹{recalculatedTax.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
 
                 <Separator className="my-2" />
@@ -1323,6 +1395,7 @@ export default function BillingPage() {
                 {/* Grand Total */}
                 <div className="flex justify-between font-bold text-base md:text-lg">
                   <span>Grand Total:</span>
+
                   <span className="text-indigo-600">
                     ₹{grandTotal.toFixed(2)}
                   </span>
@@ -1332,6 +1405,7 @@ export default function BillingPage() {
                 {roundOffAmount !== 0 && (
                   <div className="flex justify-between text-xs md:text-sm">
                     <span className="text-gray-600">Rounded Off:</span>
+
                     <span
                       className={`font-medium ${
                         roundOffAmount > 0 ? "text-blue-600" : "text-red-600"
@@ -1344,9 +1418,10 @@ export default function BillingPage() {
                   </div>
                 )}
 
-                {/* Final Rounded Total */}
+                {/* Rounded Total */}
                 <div className="flex justify-between font-bold text-lg md:text-xl pt-2 border-t-2 border-gray-200">
                   <span>Rounded Total:</span>
+
                   <span className="text-green-600">
                     ₹{roundedGrandTotal.toFixed(2)}
                   </span>
