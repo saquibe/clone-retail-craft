@@ -932,10 +932,20 @@ export default function PurchasesPage() {
                         searchResults.map((product) => (
                           <div
                             key={product._id}
-                            className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                            className="p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
                           >
                             <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1 min-w-0">
+                              {/* Make the left side (product info) clickable for adding */}
+                              <div
+                                className="flex-1 min-w-0 cursor-pointer"
+                                onClick={() => {
+                                  if (product.quantity > 0) {
+                                    handleSearchResultClick(product);
+                                  } else {
+                                    toast.error("Product is out of stock");
+                                  }
+                                }}
+                              >
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                   <span className="font-medium truncate">
@@ -970,30 +980,44 @@ export default function PurchasesPage() {
                                   Stock: {product.quantity} units
                                 </div>
                               </div>
+
+                              {/* Right side with price and buttons */}
                               <div className="text-right flex-shrink-0">
                                 <div className="text-sm font-medium text-indigo-600">
                                   MRP ₹{product.b2cSalePrice.toFixed(2)}
                                 </div>
-                                <div className="flex gap-1 mt-2">
+                                <div className="flex gap-1 mt-2 justify-end">
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => {
-                                      setBulkProduct(product);
-                                      setShowBulkAddDialog(true);
-                                      setShowSearchResults(false);
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the parent click
+                                      if (product.quantity > 0) {
+                                        setBulkProduct(product);
+                                        setShowBulkAddDialog(true);
+                                        setShowSearchResults(false);
+                                      } else {
+                                        toast.error("Product is out of stock");
+                                      }
                                     }}
                                     className="h-7 text-xs"
+                                    disabled={product.quantity <= 0}
                                   >
                                     <Layers className="w-3 h-3 mr-1" />
                                     Bulk
                                   </Button>
                                   <Button
                                     size="sm"
-                                    onClick={() =>
-                                      handleSearchResultClick(product)
-                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the parent click
+                                      if (product.quantity > 0) {
+                                        handleSearchResultClick(product);
+                                      } else {
+                                        toast.error("Product is out of stock");
+                                      }
+                                    }}
                                     className="h-7 text-xs"
+                                    disabled={product.quantity <= 0}
                                   >
                                     Add
                                   </Button>

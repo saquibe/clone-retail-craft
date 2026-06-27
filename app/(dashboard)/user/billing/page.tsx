@@ -38,7 +38,8 @@ import {
   Building2,
   Lock,
   RefreshCw,
-  Calendar, // Add this
+  Calendar,
+  Layers, // Add this
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getProducts, Product, searchProducts } from "@/lib/api/products";
@@ -115,6 +116,9 @@ export default function BillingPage() {
   const [isAddingFromEnter, setIsAddingFromEnter] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [invoiceType, setInvoiceType] = useState<"J1" | "J2">("J1");
+  const [bulkQuantity, setBulkQuantity] = useState(1);
+  const [bulkProduct, setBulkProduct] = useState<Product | null>(null);
+  const [showBulkAddDialog, setShowBulkAddDialog] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -363,6 +367,51 @@ export default function BillingPage() {
           barcodeInputRef.current?.focus();
         }, 100);
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bulk add
+  const handleBulkAdd = async () => {
+    if (!bulkProduct) return;
+
+    if (!selectedCustomer) {
+      toast.error("Please select a customer first");
+      return;
+    }
+
+    if (!billingId) {
+      toast.error("Billing session not initialized");
+      return;
+    }
+
+    // Prevent multiple clicks
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      // First add the product with quantity 1
+      const result = await addToCart(bulkProduct);
+
+      if (result) {
+        // Then update to the bulk quantity
+        await updateQuantity(bulkProduct._id, bulkQuantity);
+        toast.success(
+          `${bulkQuantity} x ${bulkProduct.productName} added to cart`,
+        );
+        setShowBulkAddDialog(false);
+        setBulkQuantity(1);
+        setBulkProduct(null);
+        setProductSearch("");
+        setShowSearchResults(false);
+      } else {
+        toast.error("Failed to add product");
+      }
+    } catch (error: any) {
+      console.error("Error in bulk add:", error);
+      toast.error(error.response?.data?.message || "Failed to add product");
     } finally {
       setLoading(false);
     }
@@ -928,11 +977,20 @@ export default function BillingPage() {
                         searchResults.map((product) => (
                           <div
                             key={product._id}
-                            className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                            onClick={() => handleSearchResultClick(product)}
+                            className="p-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                              <div className="flex-1 min-w-0">
+                              {/* Make the left side (product info) clickable for adding */}
+                              <div
+                                className="flex-1 min-w-0 cursor-pointer"
+                                onClick={() => {
+                                  if (product.quantity > 0) {
+                                    handleSearchResultClick(product);
+                                  } else {
+                                    toast.error("Product is out of stock");
+                                  }
+                                }}
+                              >
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                   <span className="font-medium text-sm truncate">
@@ -967,15 +1025,47 @@ export default function BillingPage() {
                                   Stock: {product.quantity} units
                                 </div>
                               </div>
-                              <div className="text-left sm:text-right">
-                                {/* <div className="text-sm font-medium text-indigo-600">
-                                  ₹
-                                  {selectedCustomer?.customerType === "B2B"
-                                    ? (product.b2bSalePrice || 0).toFixed(2)
-                                    : (product.b2cSalePrice || 0).toFixed(2)}
-                                </div> */}
+
+                              {/* Right side with price and buttons */}
+                              <div className="text-left sm:text-right flex flex-col items-start sm:items-end gap-2">
                                 <div className="text-sm font-medium text-indigo-600">
                                   MRP ₹{product.b2cSalePrice.toFixed(2)}
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the parent click
+                                      if (product.quantity > 0) {
+                                        setBulkProduct(product);
+                                        setShowBulkAddDialog(true);
+                                        setShowSearchResults(false);
+                                      } else {
+                                        toast.error("Product is out of stock");
+                                      }
+                                    }}
+                                    className="h-7 text-xs"
+                                    disabled={product.quantity <= 0}
+                                  >
+                                    <Layers className="w-3 h-3 mr-1" />
+                                    Bulk
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the parent click
+                                      if (product.quantity > 0) {
+                                        handleSearchResultClick(product);
+                                      } else {
+                                        toast.error("Product is out of stock");
+                                      }
+                                    }}
+                                    className="h-7 text-xs"
+                                    disabled={product.quantity <= 0}
+                                  >
+                                    Add
+                                  </Button>
                                 </div>
                               </div>
                             </div>
@@ -993,7 +1083,8 @@ export default function BillingPage() {
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Type to search by name/barcode or scan barcode. Click on any
-                product or press Enter to add to cart.
+                product or press Enter to add to cart. Click "Bulk" to add
+                multiple quantities at once.
               </p>
             </CardContent>
           </Card>
@@ -1634,13 +1725,9 @@ export default function BillingPage() {
                       </div>
                     </div>
                     <div className="text-left sm:text-right">
-                      <p className="font-semibold text-indigo-600 text-sm">
-                        ₹
-                        {selectedCustomer?.customerType === "B2B"
-                          ? (product.b2bSalePrice || 0).toFixed(2)
-                          : (product.b2cSalePrice || 0).toFixed(2)}
-                      </p>
-
+                      <div className="text-sm font-medium text-indigo-600">
+                        MRP ₹{product.b2cSalePrice.toFixed(2)}
+                      </div>
                       {product.quantity <= 0 ? (
                         <Button
                           type="button"
@@ -1665,6 +1752,124 @@ export default function BillingPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Add Dialog */}
+      <Dialog open={showBulkAddDialog} onOpenChange={setShowBulkAddDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Add Multiple Quantities</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="text-center">
+              <p className="text-lg font-medium">{bulkProduct?.productName}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Price: ₹
+                {selectedCustomer?.customerType === "B2B"
+                  ? bulkProduct?.b2bSalePrice
+                  : bulkProduct?.b2cSalePrice}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Quantity:</label>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10"
+                  onClick={() => setBulkQuantity(Math.max(1, bulkQuantity - 1))}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  min="1"
+                  value={bulkQuantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val > 0) {
+                      setBulkQuantity(val);
+                    } else if (e.target.value === "") {
+                      setBulkQuantity(1);
+                    }
+                  }}
+                  className="flex-1 text-center text-lg"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10"
+                  onClick={() => setBulkQuantity(bulkQuantity + 1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                Use +/- buttons or type quantity directly
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal:</span>
+                <span>
+                  ₹
+                  {(
+                    (selectedCustomer?.customerType === "B2B"
+                      ? bulkProduct?.b2bSalePrice || 0
+                      : bulkProduct?.b2cSalePrice || 0) * bulkQuantity
+                  ).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span>Tax ({bulkProduct?.salesTax || 0}%):</span>
+                <span>
+                  ₹
+                  {(
+                    ((selectedCustomer?.customerType === "B2B"
+                      ? bulkProduct?.b2bSalePrice || 0
+                      : bulkProduct?.b2cSalePrice || 0) *
+                      bulkQuantity *
+                      (bulkProduct?.salesTax || 0)) /
+                    100
+                  ).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between font-bold mt-2 pt-2 border-t">
+                <span>Total:</span>
+                <span className="text-indigo-600">
+                  ₹
+                  {(
+                    (selectedCustomer?.customerType === "B2B"
+                      ? bulkProduct?.b2bSalePrice || 0
+                      : bulkProduct?.b2cSalePrice || 0) *
+                      bulkQuantity +
+                    ((selectedCustomer?.customerType === "B2B"
+                      ? bulkProduct?.b2bSalePrice || 0
+                      : bulkProduct?.b2cSalePrice || 0) *
+                      bulkQuantity *
+                      (bulkProduct?.salesTax || 0)) /
+                      100
+                  ).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowBulkAddDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="flex-1" onClick={handleBulkAdd}>
+                Add {bulkQuantity} Items
+              </Button>
             </div>
           </div>
         </DialogContent>

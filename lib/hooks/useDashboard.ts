@@ -358,25 +358,9 @@ export function useDashboard(
       const payables: PayableTransaction[] = [];
 
       if (purchasesResponse.success && purchasesResponse.data) {
-        // Log all purchases with their dates
-        // console.log(
-        //   "All Purchases:",
-        //   purchasesResponse.data.map((p) => ({
-        //     invoiceNumber: p.invoiceNumber,
-        //     invoiceDate: p.invoiceDate,
-        //     localDate: new Date(p.invoiceDate).toLocaleDateString(),
-        //     status: p.status,
-        //     paymentStatus: p.paymentStatus,
-        //   })),
-        // );
-
         const filteredPurchases = purchasesResponse.data.filter(
-          (p: PurchaseInvoice) => isDateInRange(p.invoiceDate),
+          (p: PurchaseInvoice) => isDateInRange(p.createdAt),
         );
-
-        // console.log(
-        //   `Purchases: ${purchasesResponse.data.length} total, ${filteredPurchases.length} in range`,
-        // );
 
         // Log purchases that are today
         const today = new Date();
