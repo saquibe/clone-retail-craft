@@ -512,7 +512,7 @@ export default function SupplierInvoicesPage() {
             <>
               <div className="w-full overflow-x-auto">
                 <div className="inline-block min-w-full align-middle">
-                  <Table className="min-w-full whitespace-nowrap">
+                  <Table className="min-w-full">
                     <TableHeader className="sticky top-0 bg-white z-10">
                       <TableRow>
                         <TableHead className="w-8"></TableHead>
@@ -566,7 +566,7 @@ export default function SupplierInvoicesPage() {
                                   )}
                                 </Button>
                               </TableCell>
-                              <TableCell className="font-medium">
+                              <TableCell className="font-medium whitespace-nowrap">
                                 {purchase.invoiceNumber}
                               </TableCell>
                               <TableCell>
@@ -584,16 +584,22 @@ export default function SupplierInvoicesPage() {
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell className="font-mono text-xs text-gray-500">
+                              <TableCell className="font-mono text-xs text-gray-500 whitespace-nowrap">
                                 {purchase.referenceInvoiceNumber || "-"}
                               </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Building2 className="w-3 h-3 text-gray-400" />
-                                  {purchase.supplierId?.name || "N/A"}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  GST: {purchase.supplierId?.gstIn}
+                              <TableCell className="max-w-[220px]">
+                                <div className="flex items-start gap-2">
+                                  <Building2 className="w-3 h-3 text-gray-400 mt-1 flex-shrink-0" />
+
+                                  <div className="min-w-0">
+                                    <p className="font-medium leading-5 whitespace-normal break-words">
+                                      {purchase.supplierId?.name || "N/A"}
+                                    </p>
+
+                                    <p className="text-xs text-gray-500 whitespace-normal break-all">
+                                      GST: {purchase.supplierId?.gstIn}
+                                    </p>
+                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -609,7 +615,7 @@ export default function SupplierInvoicesPage() {
                                   ) || 0}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-right font-semibold">
+                              <TableCell className="text-right font-semibold whitespace-nowrap">
                                 {(() => {
                                   const finalTotal =
                                     purchase.finalTotal ||

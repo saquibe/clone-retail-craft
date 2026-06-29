@@ -190,7 +190,7 @@ export function TransactionTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[180px]">
+                <TableHead className="w-[240px]">
                   <Button variant="ghost" onClick={() => toggleSort(nameField)}>
                     {type === "receivable" ? "Customer" : "Supplier"}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -236,8 +236,10 @@ export function TransactionTable({
               ) : (
                 paginatedData.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {item[nameField]}
+                    <TableCell className="max-w-[240px]">
+                      <div className="font-medium whitespace-normal break-words leading-5">
+                        {item[nameField]}
+                      </div>
                     </TableCell>
                     <TableCell>{item[documentField]}</TableCell>
                     {/* Reference Invoice cell - ONLY for payable */}

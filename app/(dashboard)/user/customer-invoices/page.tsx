@@ -504,7 +504,7 @@ export default function CustomerInvoicesPage() {
             <>
               <div className="w-full overflow-x-auto">
                 <div className="inline-block min-w-full align-middle">
-                  <Table className="min-w-full whitespace-nowrap">
+                  <Table className="min-w-full">
                     <TableHeader className="sticky top-0 bg-white z-10">
                       <TableRow>
                         <TableHead className="w-8"></TableHead>
@@ -543,7 +543,7 @@ export default function CustomerInvoicesPage() {
                                   )}
                                 </Button>
                               </TableCell>
-                              <TableCell className="font-medium">
+                              <TableCell className="font-medium whitespace-nowrap">
                                 {billing.invoiceNumber}
                               </TableCell>
                               <TableCell>
@@ -561,22 +561,29 @@ export default function CustomerInvoicesPage() {
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <User className="w-3 h-3 text-gray-400" />
-                                  {billing.customerId?.name || "N/A"}
+                              <TableCell className="max-w-[220px]">
+                                <div className="flex items-start gap-2">
+                                  <User className="w-3 h-3 text-gray-400 mt-1 flex-shrink-0" />
+
+                                  <div className="min-w-0">
+                                    <p className="break-words whitespace-normal leading-5 font-medium">
+                                      {billing.customerId?.name || "N/A"}
+                                    </p>
+
+                                    {billing.customerId?.customerType && (
+                                      <Badge
+                                        className={
+                                          billing.customerId.customerType ===
+                                          "B2B"
+                                            ? "bg-purple-100 text-purple-800 text-xs mt-1"
+                                            : "bg-green-100 text-green-800 text-xs mt-1"
+                                        }
+                                      >
+                                        {billing.customerId.customerType}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
-                                {billing.customerId?.customerType && (
-                                  <Badge
-                                    className={
-                                      billing.customerId.customerType === "B2B"
-                                        ? "bg-purple-100 text-purple-800 text-xs mt-1"
-                                        : "bg-green-100 text-green-800 text-xs mt-1"
-                                    }
-                                  >
-                                    {billing.customerId.customerType}
-                                  </Badge>
-                                )}
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1">
@@ -591,7 +598,7 @@ export default function CustomerInvoicesPage() {
                                   ) || 0}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-right font-semibold">
+                              <TableCell className="text-right font-semibold whitespace-nowrap">
                                 {(() => {
                                   const finalTotal =
                                     billing.finalTotal ||
